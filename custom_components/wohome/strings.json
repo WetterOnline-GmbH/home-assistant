@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WetterOnline Home",
+        "description": "Set up the discovered WetterOnline Home device.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to WetterOnline Home",
+      "unsupported_api": "The device uses an unsupported API version"
+    },
+    "abort": {
+      "already_configured": "This device is already configured",
+      "no_device_id": "The discovered device did not provide a stable id",
+      "not_wohome": "The discovered service is not a WetterOnline Home device"
+    }
+  },
+  "entity": {
+    "select": {
+      "dashboard": {
+        "name": "Dashboard"
+      }
+    },
+    "switch": {
+      "display": {
+        "name": "Screen"
+      }
+    },
+    "sensor": {
+      "temperature": {
+        "name": "Temperature"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "illuminance": {
+        "name": "Illuminance"
+      }
+    }
+  }
+}
