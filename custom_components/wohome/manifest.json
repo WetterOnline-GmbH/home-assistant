@@ -1,0 +1,14 @@
+{
+  "domain": "wohome",
+  "name": "WetterOnline Home",
+  "version": "0.3.0",
+  "integration_type": "device",
+  "documentation": "https://github.com/WetterOnline-GmbH/home-assistant",
+  "issue_tracker": "https://github.com/WetterOnline-GmbH/home-assistant/issues",
+  "requirements": [],
+  "dependencies": ["lovelace"],
+  "codeowners": ["@WetterOnline-GmbH"],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "zeroconf": [{ "type": "_woh4._tcp.local." }]
+}
