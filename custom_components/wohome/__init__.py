@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from aiohttp import ClientError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError
@@ -20,6 +20,8 @@ from .const import (
 )
 from .coordinator import WoHomeCoordinator
 from .dashboard import dashboard_url
+
+LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.SELECT]
 
@@ -60,9 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.set_dashboard(dashboard_url(hass, dashboard_path))
     except (ClientError, NoURLAvailableError, OSError, ValueError) as error:
-        raise ConfigEntryNotReady(
-            "Could not transfer the Home Assistant dashboard to WoHome"
-        ) from error
+        LOGGER.warning(
+            "Could not transfer the Home Assistant dashboard URL to WoHome: %s", error
+        )
 
     entry.runtime_data = WoHomeData(api=api, coordinator=coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
