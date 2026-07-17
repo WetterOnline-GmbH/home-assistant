@@ -9,11 +9,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import WoHomeConfigEntry
 from .coordinator import WoHomeCoordinator
 
 PARALLEL_UPDATES = 0
@@ -53,7 +53,7 @@ SENSORS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: WoHomeConfigEntry, async_add_entities
 ) -> None:
     data = entry.runtime_data
     device_id = entry.unique_id or entry.entry_id

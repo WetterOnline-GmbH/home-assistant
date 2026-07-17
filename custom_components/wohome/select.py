@@ -3,7 +3,6 @@ from __future__ import annotations
 from aiohttp import ClientError
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -11,6 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import WoHomeConfigEntry
 from .const import CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH
 from .coordinator import WoHomeCoordinator
 from .dashboard import DashboardOption, dashboard_options, dashboard_url
@@ -20,7 +20,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WoHomeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     data = entry.runtime_data
@@ -44,7 +44,7 @@ class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WoHomeConfigEntry,
         coordinator: WoHomeCoordinator,
     ) -> None:
         super().__init__(coordinator)

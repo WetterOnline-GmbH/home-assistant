@@ -32,7 +32,10 @@ class WoHomeData:
     coordinator: WoHomeCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type WoHomeConfigEntry = ConfigEntry[WoHomeData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: WoHomeConfigEntry) -> bool:
     api = WoHomeApi(
         async_get_clientsession(hass),
         entry.data[CONF_HOST],
@@ -71,5 +74,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WoHomeConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

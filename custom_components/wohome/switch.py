@@ -3,18 +3,18 @@ from __future__ import annotations
 from aiohttp import ClientError
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import WoHomeConfigEntry
 from .coordinator import WoHomeCoordinator
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: WoHomeConfigEntry, async_add_entities
 ) -> None:
     data = entry.runtime_data
     async_add_entities(
