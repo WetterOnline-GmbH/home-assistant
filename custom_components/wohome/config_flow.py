@@ -32,7 +32,10 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
-        properties = {key: value.lower() for key, value in discovery_info.properties.items()}
+        properties = {
+            key: value.lower() if isinstance(value, str) else value
+            for key, value in discovery_info.properties.items()
+        }
         if (
             properties.get("model") != MODEL.lower()
             or properties.get("manufacturer") != MANUFACTURER.lower()
