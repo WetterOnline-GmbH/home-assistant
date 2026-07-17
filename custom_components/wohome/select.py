@@ -39,7 +39,6 @@ class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "dashboard"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:view-dashboard"
 
     def __init__(
         self,
