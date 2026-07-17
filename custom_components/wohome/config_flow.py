@@ -5,9 +5,8 @@ from typing import Any
 from aiohttp import ClientError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -24,7 +23,7 @@ from .const import (
 )
 
 
-class WoHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
@@ -32,7 +31,7 @@ class WoHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         properties = {key: value.lower() for key, value in discovery_info.properties.items()}
         if (
             properties.get("model") != MODEL.lower()
@@ -64,7 +63,7 @@ class WoHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         defaults = self._discovered_values or {
             CONF_HOST: "",
