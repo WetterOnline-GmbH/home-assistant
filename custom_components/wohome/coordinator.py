@@ -5,6 +5,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -41,7 +42,7 @@ class WoHomeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_setup(self) -> None:
         self.info = await self.api.get_info()
         if self.info.get("api_version") != API_VERSION:
-            raise UpdateFailed("Unsupported WoHome API version")
+            raise ConfigEntryError("Unsupported WoHome API version")
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
