@@ -6,9 +6,12 @@
         "description": "Richte das erkannte WetterOnline-Home-Gerät ein.",
         "data": {
           "host": "Host",
-          "port": "Port",
-          "name": "Name"
+          "port": "Port"
         }
+      },
+      "zeroconf_confirm": {
+        "title": "WetterOnline Home",
+        "description": "Möchtest du {name} einrichten?"
       }
     },
     "error": {
@@ -18,7 +21,9 @@
     "abort": {
       "already_configured": "Dieses Gerät ist bereits konfiguriert",
       "no_device_id": "Das erkannte Gerät hat keine stabile ID geliefert",
-      "not_wohome": "Der erkannte Dienst ist kein WetterOnline-Home-Gerät"
+      "not_wohome": "Der erkannte Dienst ist kein WetterOnline-Home-Gerät",
+      "cannot_connect": "Verbindung zu WetterOnline Home nicht möglich",
+      "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version"
     }
   },
   "entity": {

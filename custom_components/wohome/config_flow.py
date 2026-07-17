@@ -48,7 +48,6 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={
                 CONF_HOST: discovery_info.host,
                 CONF_PORT: discovery_info.port,
-                CONF_NAME: _device_name(device_id),
             }
         )
         self._discovered_values = {
@@ -59,16 +58,47 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": self._discovered_values[CONF_NAME]
         }
-        return await self.async_step_user()
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is None:
+            self._set_confirm_only()
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={
+                    "name": self._discovered_values[CONF_NAME]
+                },
+            )
+
+        host = self._discovered_values[CONF_HOST]
+        port = self._discovered_values[CONF_PORT]
+        try:
+            info = await self._device_info(host, port)
+        except (ClientError, TimeoutError, KeyError, OSError, ValueError):
+            return self.async_abort(reason="cannot_connect")
+
+        if info.get("api_version") != API_VERSION:
+            return self.async_abort(reason="unsupported_api")
+
+        device_name = str(info.get("name") or self._discovered_values[CONF_NAME])
+        return self.async_create_entry(
+            title=device_name,
+            data={
+                CONF_HOST: host,
+                CONF_PORT: port,
+                CONF_NAME: device_name,
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
-        defaults = self._discovered_values or {
+        defaults = {
             CONF_HOST: "",
             CONF_PORT: DEFAULT_PORT,
-            CONF_NAME: DEFAULT_NAME,
         }
 
         if user_input is not None:
@@ -81,7 +111,7 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     await self.async_set_unique_id(str(info["id"]))
                     self._abort_if_unique_id_configured()
-                    device_name = str(info.get("name") or user_input[CONF_NAME])
+                    device_name = str(info.get("name") or DEFAULT_NAME)
                     return self.async_create_entry(
                         title=device_name,
                         data={**user_input, CONF_NAME: device_name},
@@ -93,7 +123,6 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
                 vol.Required(CONF_PORT, default=defaults[CONF_PORT]): cv.port,
-                vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
