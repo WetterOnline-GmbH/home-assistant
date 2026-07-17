@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+from aiohttp import ClientError
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.network import NoURLAvailableError
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import WoHomeApi
 from .const import CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH
+from .coordinator import WoHomeCoordinator
 from .dashboard import DashboardOption, dashboard_options, dashboard_url
 
 
@@ -23,14 +27,13 @@ async def async_setup_entry(
             WoHomeDashboardSelect(
                 hass,
                 entry,
-                data.api,
-                data.coordinator.device_info,
+                data.coordinator,
             )
         ]
     )
 
 
-class WoHomeDashboardSelect(SelectEntity):
+class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "dashboard"
     _attr_entity_category = EntityCategory.CONFIG
@@ -40,16 +43,15 @@ class WoHomeDashboardSelect(SelectEntity):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        api: WoHomeApi,
-        device_info: DeviceInfo,
+        coordinator: WoHomeCoordinator,
     ) -> None:
+        super().__init__(coordinator)
         self._hass = hass
         self._entry = entry
-        self._api = api
         self._attr_unique_id = (
             f"{entry.unique_id or entry.entry_id}_dashboard"
         )
-        self._attr_device_info = device_info
+        self._attr_device_info = coordinator.device_info
 
     @property
     def options(self) -> list[str]:
@@ -79,7 +81,14 @@ class WoHomeDashboardSelect(SelectEntity):
         if selected is None:
             raise ValueError(f"Unknown dashboard: {option}")
 
-        await self._api.set_dashboard(dashboard_url(self._hass, selected.path))
+        try:
+            url = dashboard_url(self._hass, selected.path)
+            await self.coordinator.api.set_dashboard(url)
+        except (ClientError, TimeoutError, OSError, NoURLAvailableError) as error:
+            raise HomeAssistantError(
+                f"Could not set WoHome dashboard to {selected.label}: {error}"
+            ) from error
+
         self._hass.config_entries.async_update_entry(
             self._entry,
             options={

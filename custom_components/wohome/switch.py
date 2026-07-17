@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from aiohttp import ClientError
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import WoHomeCoordinator
@@ -35,9 +38,19 @@ class WoHomeDisplaySwitch(CoordinatorEntity[WoHomeCoordinator], SwitchEntity):
         return value if isinstance(value, bool) else None
 
     async def async_turn_on(self, **kwargs) -> None:
-        await self.coordinator.api.set_display(True)
+        try:
+            await self.coordinator.api.set_display(True)
+        except (ClientError, TimeoutError, OSError) as error:
+            raise HomeAssistantError(
+                f"Could not turn on the WoHome display: {error}"
+            ) from error
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
-        await self.coordinator.api.set_display(False)
+        try:
+            await self.coordinator.api.set_display(False)
+        except (ClientError, TimeoutError, OSError) as error:
+            raise HomeAssistantError(
+                f"Could not turn off the WoHome display: {error}"
+            ) from error
         await self.coordinator.async_request_refresh()
