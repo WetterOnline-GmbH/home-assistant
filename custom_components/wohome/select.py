@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 class WoHomeDashboardSelect(SelectEntity):
     _attr_has_entity_name = True
-    _attr_name = "Dashboard"
+    _attr_translation_key = "dashboard"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:view-dashboard"
 

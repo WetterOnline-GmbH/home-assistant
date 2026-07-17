@@ -19,7 +19,7 @@ async def async_setup_entry(
 
 class WoHomeDisplaySwitch(CoordinatorEntity[WoHomeCoordinator], SwitchEntity):
     _attr_has_entity_name = True
-    _attr_name = "Screen"
+    _attr_translation_key = "display"
 
     def __init__(self, device_id: str, coordinator: WoHomeCoordinator) -> None:
         super().__init__(coordinator)
