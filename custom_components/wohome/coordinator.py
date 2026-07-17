@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiohttp import ClientError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -47,7 +49,7 @@ class WoHomeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             return await self.api.get_state()
-        except Exception as error:
+        except (ClientError, TimeoutError, OSError) as error:
             raise UpdateFailed(str(error)) from error
 
     @property
