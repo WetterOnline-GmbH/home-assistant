@@ -3,11 +3,11 @@
   "name": "WetterOnline Weather",
   "version": "0.1.0",
   "integration_type": "service",
-  "documentation": "https://github.com/wetteronline/ha-wetteronline",
-  "issue_tracker": "https://github.com/wetteronline/ha-wetteronline/issues",
+  "documentation": "https://github.com/WetterOnline-GmbH/home-assistant",
+  "issue_tracker": "https://github.com/WetterOnline-GmbH/home-assistant/issues",
   "requirements": [],
   "dependencies": [],
-  "codeowners": ["@wetteronline"],
+  "codeowners": ["@WetterOnline-GmbH"],
   "config_flow": true,
   "iot_class": "cloud_polling"
 }
