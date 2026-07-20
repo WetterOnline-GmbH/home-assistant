@@ -157,3 +157,47 @@ Same two-phase path as `wohome`:
   whatever entities/tile URLs exist and does not affect either integration.
   Note: any radar/tile imagery URLs it needs should be exposed by *this* weather
   integration, not by the station.
+
+## 9. Implementation status: skeleton (as of this branch)
+
+A working skeleton of this integration exists at
+`custom_components/wetteronline/`. It implements the full structure described
+above with the **HTTP layer stubbed** — no network requests are made yet, so it
+loads end-to-end against placeholder data (the config flow completes and the
+weather entity renders dummy values). This lets UI/card work and config-flow
+tests proceed before the real API and token support ship.
+
+Files:
+
+| File               | Status                                                        |
+| ------------------ | ------------------------------------------------------------- |
+| `__init__.py`      | Complete — setup/unload, `runtime_data`, typed config entry   |
+| `api.py`           | **Stub** — returns placeholder data, no I/O (see TODOs below)  |
+| `config_flow.py`   | Complete — user, location, discovery+confirm, reauth, reconfigure, options |
+| `coordinator.py`   | Complete — auth error → `ConfigEntryAuthFailed`, else `UpdateFailed` |
+| `weather.py`       | Complete except the condition map (see TODOs below)           |
+| `diagnostics.py`   | Complete — redacts API key and coordinates                    |
+| `const.py`, `manifest.json`, `strings.json`, `translations/{en,de}.json` | Complete |
+
+### Wiring to do once the API exists
+
+All network wiring is marked with `# TODO(api)` comments:
+
+- `api.py` → `async_validate_key()` — `GET /account`; raise `WetterOnlineAuthError`
+  on 401, `WetterOnlineConnectionError` on network/5xx.
+- `api.py` → `async_search_location(query)` — `GET /geocode?q=`.
+- `api.py` → `async_get_weather(location)` — `GET /weather?lat=&lon=`.
+- `weather.py` → `CONDITION_MAP` — complete the WetterOnline condition-code →
+  HA `condition` mapping once the real code set is documented.
+- `manifest.json` → `requirements` — add the pinned WetterOnline PyPI client
+  once it is published (currently `[]`).
+
+### Not yet done
+
+- **Tests** — the Bronze-tier 100% config-flow coverage is not written yet.
+- **Companion sensors** (UV, pollen, precipitation probability) — deferred to a
+  later release as noted in §1.
+- The station-side `GET /api/v1/weather-service` endpoint (§2b) and the
+  discovery trigger in the `wohome` integration that calls it — the weather
+  side (`async_step_integration_discovery`) is ready to receive the handoff,
+  but nothing emits it yet.
