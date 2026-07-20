@@ -1,0 +1,13 @@
+{
+  "domain": "wetteronline",
+  "name": "WetterOnline Weather",
+  "version": "0.1.0",
+  "integration_type": "service",
+  "documentation": "https://github.com/wetteronline/ha-wetteronline",
+  "issue_tracker": "https://github.com/wetteronline/ha-wetteronline/issues",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@wetteronline"],
+  "config_flow": true,
+  "iot_class": "cloud_polling"
+}
