@@ -112,7 +112,7 @@ sequenceDiagram
         M->>U: "Add WetterOnline Weather for <location>?"
         U-->>M: Confirm
         M->>M: create entry (location = unique_id)
-        Note over M: HA now owns the location;<br/>user can reconfigure it
+        Note over M: HA now owns the location -<br/>user can reconfigure it
     else feature disabled
         S-->>W: 404 / 403
         Note over W: skip silently — no weather entry
