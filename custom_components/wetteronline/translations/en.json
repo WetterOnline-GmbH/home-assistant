@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WetterOnline Weather",
+        "description": "Enter your WetterOnline API key to set up cloud weather data.",
+        "data": {
+          "api_key": "API key"
+        }
+      },
+      "location": {
+        "title": "Choose a location",
+        "description": "Search for a location, or confirm the coordinates below (defaults to your Home Assistant location).",
+        "data": {
+          "location_query": "Location search (optional)",
+          "latitude": "Latitude",
+          "longitude": "Longitude"
+        }
+      },
+      "discovery_confirm": {
+        "title": "WetterOnline Weather",
+        "description": "WetterOnline Weather was discovered via your WoHome station for {name}. Add it?"
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate WetterOnline Weather",
+        "description": "Your WetterOnline API key is no longer valid. Enter a new key.",
+        "data": {
+          "api_key": "API key"
+        }
+      },
+      "reconfigure": {
+        "title": "Change location",
+        "description": "Search for a new location, or update the coordinates.",
+        "data": {
+          "location_query": "Location search (optional)",
+          "latitude": "Latitude",
+          "longitude": "Longitude"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid API key",
+      "cannot_connect": "Could not connect to WetterOnline"
+    },
+    "abort": {
+      "already_configured": "This location is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "The location was updated successfully"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "WetterOnline Weather options",
+        "description": "Configure how often WetterOnline Weather is polled.",
+        "data": {
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
+    }
+  }
+}
