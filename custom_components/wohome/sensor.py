@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import WoHomeConfigEntry
 from .coordinator import WoHomeCoordinator
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 0 # allow parallel updates for sensors since they are read-only and do not cause race conditions
 
 
 @dataclass(frozen=True, kw_only=True)

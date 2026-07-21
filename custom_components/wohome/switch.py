@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import WoHomeConfigEntry
 from .coordinator import WoHomeCoordinator
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 1 # no parallel updates to avoid race conditions
 
 
 async def async_setup_entry(

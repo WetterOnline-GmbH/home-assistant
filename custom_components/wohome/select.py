@@ -15,7 +15,7 @@ from .const import CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH
 from .coordinator import WoHomeCoordinator
 from .dashboard import DashboardOption, dashboard_options, dashboard_url
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 1 # no parallel updates to avoid race conditions
 
 
 async def async_setup_entry(
