@@ -27,7 +27,9 @@ The local device API currently does not use authentication and should only be us
    - Add the URL to the repository. (https://github.com/WetterOnline-GmbH/home-assistant)
    - Select “integration” as the type.
    - Click the “ADD” button.
+1. Search for "WetterOnline Home" in HACS and install the integration
 1. Add the automatically detected WOHome under **Settings → Devices & Services**.
+  - If you are on a different network add it manually **Settings → Devices & Services → Add Integration → WetterOnline Home**.
 
 After setup, the dashboard can be customized via the `Dashboard` select entity in the configuration section of the respective device.
 
