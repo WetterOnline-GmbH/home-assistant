@@ -24,7 +24,7 @@ The local device API currently does not use authentication and should only be us
 1. Install the repo via HACS:
    - Click the 3 dots in the top right corner.
    - Select “Custom repositories”
-   - Add the URL to the repository.
+   - Add the URL to the repository. (https://github.com/WetterOnline-GmbH/home-assistant)
    - Select “integration” as the type.
    - Click the “ADD” button.
 1. Add the automatically detected WOHome under **Settings → Devices & Services**.
