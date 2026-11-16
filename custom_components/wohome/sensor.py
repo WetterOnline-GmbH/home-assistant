@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, LIGHT_LUX, PERCENTAGE, UnitOfTemperature
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -60,13 +60,10 @@ async def async_setup_entry(
 ) -> None:
     data = entry.runtime_data
     device_id = entry.unique_id or entry.entry_id
-    entities = [
+    async_add_entities(
         WoHomeSensor(device_id, data.coordinator, description)
         for description in SENSORS
-    ]
-    if data.coordinator.info.get("display_rules_control") is True:
-        entities.append(WoHomeDisplayRules(device_id, data.coordinator))
-    async_add_entities(entities)
+    )
 
 
 class WoHomeSensor(CoordinatorEntity[WoHomeCoordinator], SensorEntity):
@@ -96,24 +93,3 @@ class WoHomeSensor(CoordinatorEntity[WoHomeCoordinator], SensorEntity):
         if precision is not None and isinstance(value, (int, float)):
             return round(value, precision)
         return value
-
-
-class WoHomeDisplayRules(CoordinatorEntity[WoHomeCoordinator], SensorEntity):
-    _attr_has_entity_name = True
-    _attr_translation_key = "display_rules"
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_native_unit_of_measurement = None
-
-    def __init__(self, device_id: str, coordinator: WoHomeCoordinator) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{device_id}_display_rules"
-        self._attr_device_info = coordinator.device_info
-
-    @property
-    def native_value(self) -> int | None:
-        rules = (self.coordinator.data or {}).get("display_rules")
-        return len(rules) if isinstance(rules, list) else None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        return {"rules": (self.coordinator.data or {}).get("display_rules")}

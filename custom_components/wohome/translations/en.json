@@ -27,9 +27,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "scheduled_on": {"name": "Display schedule active"}
-    },
     "number": {
       "brightness": {"name": "Display brightness"}
     },
@@ -50,7 +47,6 @@
       }
     },
     "sensor": {
-      "display_rules": {"name": "Display schedule rules"},
       "temperature": {
         "name": "Temperature"
       },
@@ -59,17 +55,6 @@
       },
       "illuminance": {
         "name": "Illuminance"
-      }
-    }
-  },
-  "services": {
-    "set_display_rules": {
-      "name": "Update display schedule rules",
-      "description": "Replace the device rules only if they have not changed since they were read.",
-      "fields": {
-        "config_entry_id": {"name": "WO Home"},
-        "expected": {"name": "Current rules"},
-        "rules": {"name": "New rules"}
       }
     }
   }
