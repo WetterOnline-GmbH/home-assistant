@@ -20,7 +20,7 @@ async def async_setup_entry(
     data = entry.runtime_data
     device_id = entry.unique_id or entry.entry_id
     entities = [WoHomeDisplaySwitch(device_id, data.coordinator)]
-    if data.coordinator.info.get("auto_brightness_control") is True:
+    if data.coordinator.info.get("brightness_control") is True:
         entities.append(WoHomeAutoBrightnessSwitch(device_id, data.coordinator))
     async_add_entities(entities)
 

@@ -44,13 +44,13 @@ def test_display_entities():
 def test_auto_brightness_capability():
     entry = Mock(unique_id="test")
     coordinator = entry.runtime_data.coordinator
-    coordinator.info = {"brightness_control": True}
+    coordinator.info = {}
     add = Mock()
     asyncio.run(setup_numbers(Mock(), entry, add))
     add.assert_not_called()
     asyncio.run(setup_switches(Mock(), entry, add))
     assert not any(isinstance(entity, WoHomeAutoBrightnessSwitch) for entity in add.call_args.args[0])
-    coordinator.info["auto_brightness_control"] = True
+    coordinator.info["brightness_control"] = True
     add.reset_mock()
     asyncio.run(setup_numbers(Mock(), entry, add))
     assert isinstance(add.call_args.args[0][0], WoHomeBrightness)

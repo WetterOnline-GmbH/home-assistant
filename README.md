@@ -36,7 +36,7 @@ After setup, the dashboard can be customized via the `Dashboard` select entity i
 
 ## Display brightness
 
-These features require a WO Home app version that advertises brightness and automatic brightness control.
+These features require a WO Home app version that advertises brightness control.
 Older devices continue to expose the existing screen switch and sensors.
 Reload the integration after updating the device so its new capabilities are detected.
 

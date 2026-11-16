@@ -17,10 +17,7 @@ MAX_DEVICE_BRIGHTNESS = 255
 
 async def async_setup_entry(hass: HomeAssistant, entry: WoHomeConfigEntry, async_add_entities) -> None:
     coordinator = entry.runtime_data.coordinator
-    if (
-        coordinator.info.get("brightness_control") is True
-        and coordinator.info.get("auto_brightness_control") is True
-    ):
+    if coordinator.info.get("brightness_control") is True:
         async_add_entities([WoHomeBrightness(entry.unique_id or entry.entry_id, coordinator)])
 
 
