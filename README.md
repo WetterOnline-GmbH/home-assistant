@@ -36,14 +36,13 @@ After setup, the dashboard can be customized via the `Dashboard` select entity i
 
 ## Display brightness
 
-These features require a WO Home app version that advertises brightness control.
+These features require a WO Home app version that advertises brightness and automatic brightness control.
 Older devices continue to expose the existing screen switch and sensors.
 Reload the integration after updating the device so its new capabilities are detected.
 
 The **Display brightness** slider sets a persistent manual brightness (6–100%) and disables
 automatic brightness, including when an automation changes it. Use **Automatically adjust screen
-brightness** to enable the light sensor again. Older app versions use a temporary override and
-retain the **Restore device brightness** button.
+brightness** to enable the light sensor again.
 
 ## Development
 

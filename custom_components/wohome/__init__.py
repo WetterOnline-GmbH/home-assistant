@@ -25,7 +25,6 @@ LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.SWITCH, Platform.SENSOR, Platform.SELECT, Platform.NUMBER,
-    Platform.BUTTON,
 ]
 
 

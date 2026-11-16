@@ -15,7 +15,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(hass: HomeAssistant, entry: WoHomeConfigEntry, async_add_entities) -> None:
     coordinator = entry.runtime_data.coordinator
-    if coordinator.info.get("brightness_control") is True:
+    if coordinator.info.get("brightness_control") is True and coordinator.info.get("auto_brightness_control") is True:
         async_add_entities([WoHomeBrightness(entry.unique_id or entry.entry_id, coordinator)])
 
 
@@ -36,9 +36,7 @@ class WoHomeBrightness(CoordinatorEntity[WoHomeCoordinator], NumberEntity):
     @property
     def native_value(self) -> float | None:
         display = (self.coordinator.data or {}).get("display")
-        value = display.get("brightness_override") if isinstance(display, dict) else None
-        if value is None and isinstance(display, dict):
-            value = display.get("brightness")
+        value = display.get("brightness") if isinstance(display, dict) else None
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not 15 <= value <= 255:
             return None
         return round(value * 100 / 255)

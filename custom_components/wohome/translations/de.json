@@ -30,9 +30,6 @@
     "number": {
       "brightness": {"name": "Displayhelligkeit"}
     },
-    "button": {
-      "restore_brightness": {"name": "Gerätehelligkeit wiederherstellen"}
-    },
     "select": {
       "dashboard": {
         "name": "Dashboard"

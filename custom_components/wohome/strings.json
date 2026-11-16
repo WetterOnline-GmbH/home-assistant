@@ -30,9 +30,6 @@
     "number": {
       "brightness": {"name": "Display brightness"}
     },
-    "button": {
-      "restore_brightness": {"name": "Restore device brightness"}
-    },
     "select": {
       "dashboard": {
         "name": "Dashboard"

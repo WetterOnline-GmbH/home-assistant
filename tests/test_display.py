@@ -3,9 +3,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from aiohttp import ClientResponseError, ClientSession, web
-from custom_components.wohome.button import WoHomeRestoreBrightness
-from custom_components.wohome.button import async_setup_entry as setup_buttons
-from custom_components.wohome.number import WoHomeBrightness
+from custom_components.wohome.number import WoHomeBrightness, async_setup_entry as setup_numbers
 from custom_components.wohome.switch import WoHomeAutoBrightnessSwitch, async_setup_entry as setup_switches
 from custom_components.wohome.api import WoHomeApi
 
@@ -13,20 +11,15 @@ from custom_components.wohome.api import WoHomeApi
 def test_display_entities():
     coordinator = Mock()
     coordinator.data = {
-        "display": {"brightness": 180, "brightness_override": None},
+        "display": {"brightness": 180},
     }
     coordinator.api.set_brightness = AsyncMock()
     coordinator.api.set_auto_brightness = AsyncMock()
     coordinator.async_request_refresh = AsyncMock()
     number = WoHomeBrightness("test", coordinator)
     assert number.native_value == 71
-    coordinator.data["display"]["brightness_override"] = 51
-    assert number.native_value == 20
-
     asyncio.run(number.async_set_native_value(20))
     coordinator.api.set_brightness.assert_awaited_with(51)
-    asyncio.run(WoHomeRestoreBrightness("test", coordinator).async_press())
-    coordinator.api.set_brightness.assert_awaited_with(None)
     auto_brightness = WoHomeAutoBrightnessSwitch("test", coordinator)
     assert auto_brightness.is_on is None
     coordinator.data["display"]["auto_brightness"] = True
@@ -36,22 +29,22 @@ def test_display_entities():
     asyncio.run(auto_brightness.async_turn_on())
     coordinator.api.set_auto_brightness.assert_awaited_with(True)
 
-    coordinator.data["display"]["brightness_override"] = None
     coordinator.data["display"]["brightness"] = True
     assert number.native_value is None
 
 
-def test_auto_brightness_capability_and_legacy_button():
+def test_auto_brightness_capability():
     entry = Mock(unique_id="test")
     coordinator = entry.runtime_data.coordinator
     coordinator.info = {"brightness_control": True}
     add = Mock()
-    asyncio.run(setup_buttons(Mock(), entry, add))
-    assert isinstance(add.call_args.args[0][0], WoHomeRestoreBrightness)
-    coordinator.info["auto_brightness_control"] = True
-    add.reset_mock()
-    asyncio.run(setup_buttons(Mock(), entry, add))
+    asyncio.run(setup_numbers(Mock(), entry, add))
     add.assert_not_called()
+    asyncio.run(setup_switches(Mock(), entry, add))
+    assert not any(isinstance(entity, WoHomeAutoBrightnessSwitch) for entity in add.call_args.args[0])
+    coordinator.info["auto_brightness_control"] = True
+    asyncio.run(setup_numbers(Mock(), entry, add))
+    assert isinstance(add.call_args.args[0][0], WoHomeBrightness)
     asyncio.run(setup_switches(Mock(), entry, add))
     assert any(isinstance(entity, WoHomeAutoBrightnessSwitch) for entity in add.call_args.args[0])
 
@@ -78,7 +71,6 @@ def test_api_display_commands():
                 api = WoHomeApi(session, "127.0.0.1", port)
                 await api.set_display(True)
                 await api.set_brightness(51)
-                await api.set_brightness(None)
                 await api.set_auto_brightness(True)
                 with pytest.raises(ClientResponseError) as error:
                     await api.set_brightness(0)
@@ -86,7 +78,6 @@ def test_api_display_commands():
             assert bodies == [
                 ("/api/v1/display", {"is_on": True}),
                 ("/api/v1/brightness", {"brightness": 51}),
-                ("/api/v1/brightness", {"brightness": None}),
                 ("/api/v1/auto_brightness", {"enabled": True}),
                 ("/api/v1/brightness", {"brightness": 0}),
             ]
