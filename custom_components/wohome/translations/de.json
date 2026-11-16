@@ -27,17 +27,30 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "scheduled_on": {"name": "Display-Zeitregel aktiv"}
+    },
+    "number": {
+      "brightness": {"name": "Displayhelligkeit"}
+    },
+    "button": {
+      "restore_brightness": {"name": "Gerätehelligkeit wiederherstellen"}
+    },
     "select": {
       "dashboard": {
         "name": "Dashboard"
       }
     },
     "switch": {
+      "auto_brightness": {
+        "name": "Bildschirmhelligkeit automatisch anpassen"
+      },
       "display": {
         "name": "Bildschirm"
       }
     },
     "sensor": {
+      "display_rules": {"name": "Display-Zeitregeln"},
       "temperature": {
         "name": "Temperatur"
       },
@@ -46,6 +59,17 @@
       },
       "illuminance": {
         "name": "Beleuchtungsstärke"
+      }
+    }
+  },
+  "services": {
+    "set_display_rules": {
+      "name": "Display-Zeitregeln ändern",
+      "description": "Ersetzt die Geräte-Regeln nur, wenn sie seit dem Auslesen unverändert sind.",
+      "fields": {
+        "config_entry_id": {"name": "WO Home"},
+        "expected": {"name": "Aktuelle Regeln"},
+        "rules": {"name": "Neue Regeln"}
       }
     }
   }

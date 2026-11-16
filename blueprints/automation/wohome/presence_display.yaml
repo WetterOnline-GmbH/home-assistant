@@ -1,0 +1,128 @@
+blueprint:
+  name: WO Home – Display bei Anwesenheit
+  description: >-
+    Steuert Display und Helligkeit anhand einer Anwesenheitsquelle. Die Zeitregeln
+    auf WO Home haben Vorrang. Unbekannte Zustände lösen keine Aktion aus.
+  domain: automation
+  input:
+    presence:
+      name: Anwesenheit
+      description: Person oder binärer Anwesenheits- bzw. Bewegungssensor
+      selector:
+        entity:
+          filter:
+            - domain: person
+            - domain: binary_sensor
+    display:
+      name: WO-Home-Display
+      selector:
+        entity:
+          filter:
+            - domain: switch
+              integration: wohome
+    brightness:
+      name: WO-Home-Displayhelligkeit
+      selector:
+        entity:
+          filter:
+            - domain: number
+              integration: wohome
+    schedule:
+      name: WO-Home-Display-Zeitregel aktiv
+      selector:
+        entity:
+          filter:
+            - domain: binary_sensor
+              integration: wohome
+    present_brightness:
+      name: Helligkeit bei Anwesenheit
+      default: 80
+      selector:
+        number:
+          min: 6
+          max: 100
+          unit_of_measurement: "%"
+    absent_action:
+      name: Bei Abwesenheit
+      default: dim
+      selector:
+        select:
+          options:
+            - label: Display dimmen
+              value: dim
+            - label: Standby
+              value: standby
+    absent_brightness:
+      name: Helligkeit bei Abwesenheit
+      default: 20
+      selector:
+        number:
+          min: 6
+          max: 100
+          unit_of_measurement: "%"
+    absent_delay:
+      name: Verzögerung bei Abwesenheit
+      default:
+        minutes: 10
+      selector:
+        duration:
+
+mode: restart
+variables:
+  presence_entity: !input presence
+  schedule_entity: !input schedule
+  absent_action: !input absent_action
+triggers:
+  - trigger: state
+    entity_id: !input presence
+  - trigger: state
+    entity_id: !input schedule
+  - trigger: state
+    entity_id: !input display
+    from: unavailable
+  - trigger: state
+    entity_id: !input display
+    from: unknown
+  - trigger: homeassistant
+    event: start
+actions:
+  - action: homeassistant.update_entity
+    target:
+      entity_id: !input schedule
+  - choose:
+      - conditions: >-
+          {{ is_state(schedule_entity, 'on') and states(presence_entity) in ['on', 'home'] }}
+        sequence:
+          - action: number.set_value
+            target:
+              entity_id: !input brightness
+            data:
+              value: !input present_brightness
+          - action: switch.turn_on
+            target:
+              entity_id: !input display
+      - conditions: >-
+          {{ is_state(schedule_entity, 'on') and states(presence_entity) in ['off', 'not_home'] }}
+        sequence:
+          - delay: !input absent_delay
+          - action: homeassistant.update_entity
+            target:
+              entity_id: !input schedule
+          - condition: template
+            value_template: >-
+              {{ is_state(schedule_entity, 'on') and states(presence_entity) in ['off', 'not_home'] }}
+          - choose:
+              - conditions: "{{ absent_action == 'standby' }}"
+                sequence:
+                  - action: switch.turn_off
+                    target:
+                      entity_id: !input display
+            default:
+              - action: number.set_value
+                target:
+                  entity_id: !input brightness
+                data:
+                  value: !input absent_brightness
+              - action: switch.turn_on
+                target:
+                  entity_id: !input display
