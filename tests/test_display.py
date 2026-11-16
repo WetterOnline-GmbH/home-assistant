@@ -18,6 +18,14 @@ def test_display_entities():
     coordinator.async_request_refresh = AsyncMock()
     number = WoHomeBrightness("test", coordinator)
     assert number.native_value == 71
+    assert number.native_min_value == 0
+    assert number.native_max_value == 100
+    coordinator.data["display"]["brightness"] = 1
+    assert number.native_value == 0
+    asyncio.run(number.async_set_native_value(0))
+    coordinator.api.set_brightness.assert_awaited_with(1)
+    asyncio.run(number.async_set_native_value(100))
+    coordinator.api.set_brightness.assert_awaited_with(255)
     asyncio.run(number.async_set_native_value(20))
     coordinator.api.set_brightness.assert_awaited_with(51)
     auto_brightness = WoHomeAutoBrightnessSwitch("test", coordinator)
@@ -43,6 +51,7 @@ def test_auto_brightness_capability():
     asyncio.run(setup_switches(Mock(), entry, add))
     assert not any(isinstance(entity, WoHomeAutoBrightnessSwitch) for entity in add.call_args.args[0])
     coordinator.info["auto_brightness_control"] = True
+    add.reset_mock()
     asyncio.run(setup_numbers(Mock(), entry, add))
     assert isinstance(add.call_args.args[0][0], WoHomeBrightness)
     asyncio.run(setup_switches(Mock(), entry, add))
