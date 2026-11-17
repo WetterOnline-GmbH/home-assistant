@@ -27,12 +27,18 @@
     }
   },
   "entity": {
+    "number": {
+      "brightness": {"name": "Displayhelligkeit"}
+    },
     "select": {
       "dashboard": {
         "name": "Dashboard"
       }
     },
     "switch": {
+      "auto_brightness": {
+        "name": "Bildschirmhelligkeit automatisch anpassen"
+      },
       "display": {
         "name": "Bildschirm"
       }

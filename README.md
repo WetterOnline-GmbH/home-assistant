@@ -8,6 +8,7 @@ Custom integration for connecting WOHome stations locally to Home Assistant.
 
 - Automatic detection of compatible stations via Zeroconf (`_woh4._tcp.local.`)
 - Turn the screen on and off and display the current screen status
+- Control display brightness and the device's automatic brightness setting
 - Provide temperature, humidity, and ambient brightness as sensors
 - Select a Home Assistant dashboard for each station and send it to the station
 - Support for multiple stations within a single Home Assistant installation
@@ -32,6 +33,16 @@ The local device API currently does not use authentication and should only be us
   - If you are on a different network add it manually **Settings → Devices & Services → Add Integration → WetterOnline Home**.
 
 After setup, the dashboard can be customized via the `Dashboard` select entity in the configuration section of the respective device.
+
+## Display brightness
+
+These features require a WO Home app version that advertises brightness control.
+Older devices continue to expose the existing screen switch and sensors.
+Reload the integration after updating the device so its new capabilities are detected.
+
+The **Display brightness** slider sets a persistent manual brightness (0–100%) and disables
+automatic brightness, including when an automation changes it. 0% corresponds to the minimum
+device value of 1. Use **Automatically adjust screen brightness** to enable the light sensor again.
 
 ## Development
 

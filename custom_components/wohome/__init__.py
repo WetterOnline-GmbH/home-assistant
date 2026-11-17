@@ -23,7 +23,9 @@ from .dashboard import dashboard_url
 
 LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.SELECT]
+PLATFORMS = [
+    Platform.SWITCH, Platform.SENSOR, Platform.SELECT, Platform.NUMBER,
+]
 
 
 @dataclass
