@@ -3,7 +3,7 @@
   "name": "WetterOnline Home",
   "codeowners": ["@WetterOnline-GmbH"],
   "config_flow": true,
-  "dependencies": ["camera", "lovelace", "stream"],
+  "dependencies": ["camera", "http", "lovelace", "stream"],
   "documentation": "https://github.com/WetterOnline-GmbH/home-assistant",
   "integration_type": "device",
   "iot_class": "local_polling",
