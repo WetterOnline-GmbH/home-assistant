@@ -38,6 +38,12 @@ class WoHomeApi:
     async def set_display(self, is_on: bool) -> None:
         await self._put_json("/display", {"is_on": is_on})
 
+    async def set_brightness(self, brightness: int) -> None:
+        await self._put_json("/brightness", {"brightness": brightness})
+
+    async def set_auto_brightness(self, enabled: bool) -> None:
+        await self._put_json("/auto_brightness", {"enabled": enabled})
+
     async def set_dashboard(self, url: str) -> None:
         await self._put_json("/dashboard", {"url": url})
 

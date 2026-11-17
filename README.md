@@ -8,6 +8,7 @@ Custom integration for connecting WOHome stations locally to Home Assistant.
 
 - Automatic detection of compatible stations via Zeroconf (`_woh4._tcp.local.`)
 - Turn the screen on and off and display the current screen status
+- Control display brightness and the device's automatic brightness setting
 - Provide temperature, humidity, and ambient brightness as sensors
 - Select a Home Assistant dashboard for each station and send it to the station
 - Show a camera stream in the station's native video dialog from an automation, preferring WebRTC with an HLS fallback
@@ -71,6 +72,16 @@ reach it, including any HLS playlists and segments. The existing dashboard login
 the native player; the action resolves a Home Assistant stream URL for each request instead.
 Stream URLs must not be stored in automations or logs. Only use this unauthenticated device API
 on a trusted network.
+
+## Display brightness
+
+These features require a WO Home app version that advertises brightness control.
+Older devices continue to expose the existing screen switch and sensors.
+Reload the integration after updating the device so its new capabilities are detected.
+
+The **Display brightness** slider sets a persistent manual brightness (0–100%) and disables
+automatic brightness, including when an automation changes it. 0% corresponds to the minimum
+device value of 1. Use **Automatically adjust screen brightness** to enable the light sensor again.
 
 ## Development
 
