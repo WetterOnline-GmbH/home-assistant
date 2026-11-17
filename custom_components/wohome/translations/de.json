@@ -26,6 +26,17 @@
       "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version"
     }
   },
+  "services": {
+    "open_camera": {
+      "name": "Kamera anzeigen",
+      "description": "Zeigt einen Kamerastream im Videodialog der Station an.",
+      "fields": {
+        "device_id": {"name": "Station"},
+        "camera_entity_id": {"name": "Kamera"},
+        "duration": {"name": "Anzeigedauer"}
+      }
+    }
+  },
   "entity": {
     "select": {
       "dashboard": {
