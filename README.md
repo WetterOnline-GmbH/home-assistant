@@ -16,7 +16,8 @@ Custom integration for connecting WOHome stations locally to Home Assistant.
 
 ## Requirements
 
-- Home Assistant 2026.3 or newer
+- Home Assistant 2026.3 or newer for the existing station controls
+- Home Assistant 2026.11.1 or newer for the camera action (earlier versions have not been tested)
 - Home Assistant feature enabled in the WOHome developer settings
 
 The local device API currently does not use authentication and should only be used on a trusted network.
