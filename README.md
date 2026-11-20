@@ -1,7 +1,5 @@
 # WOHome - HA Integration
 
-> **INTERNAL USE ONLY - NOT AVAILABLE FOR PUBLIC USE YET**
-
 Custom integration for connecting WOHome stations locally to Home Assistant.
 
 ## Features
@@ -20,7 +18,8 @@ Custom integration for connecting WOHome stations locally to Home Assistant.
 - Home Assistant 2026.11.1 or newer for the camera action (earlier versions have not been tested)
 - Home Assistant feature enabled in the WOHome developer settings
 
-The local device API currently does not use authentication and should only be used on a trusted network.
+The station API has no authentication. Any device that can reach the station on port `8080`
+can send commands; keep it on a private home network and do not forward this port to the Internet.
 
 ## Installation
 
@@ -66,7 +65,7 @@ WebRTC signaling uses a signed, expiring Home Assistant URL scoped to the select
 The station receives no general Home Assistant credentials. Treat this URL as a secret.
 HLS playback, including the fallback, uses a Home Assistant stream token that is not tied to
 the signed URL's expiry. Anyone who obtains that token can access the stream while it remains
-active. Keep stream URLs private and use this prototype only on a trusted network.
+active. This is an accepted risk for operation on private home networks; keep stream URLs private.
 WebRTC additionally requires reachable ICE candidates: a working dashboard or signaling connection alone
 does not prove that video packets can reach the station. Separate networks may require configured
 go2rtc candidates, firewall rules, or a TURN server. The native player uses ICE servers supplied by HA.
@@ -74,8 +73,7 @@ It does not bypass certificate validation or promise support for every camera co
 Configure Home Assistant's local URL under **Settings → System → Network** so the station can
 reach it, including any HLS playlists and segments. The existing dashboard login does not authenticate
 the native player; the action resolves a Home Assistant stream URL for each request instead.
-Stream URLs must not be stored in automations or logs. Only use this unauthenticated device API
-on a trusted network.
+Stream URLs must not be stored in automations or logs.
 
 ## Display brightness
 
