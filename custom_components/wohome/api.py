@@ -46,3 +46,9 @@ class WoHomeApi:
 
     async def set_dashboard(self, url: str) -> None:
         await self._put_json("/dashboard", {"url": url})
+
+    async def open_camera(self, url: str, title: str, duration: int, *, webrtc_url: str | None = None) -> None:
+        body = {"url": url, "title": title, "duration": duration}
+        if webrtc_url is not None:
+            body["webrtc_url"] = webrtc_url
+        await self._put_json("/camera", body)

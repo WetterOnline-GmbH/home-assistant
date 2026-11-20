@@ -7,8 +7,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError
+from homeassistant.helpers.typing import ConfigType
 
 from .api import WoHomeApi
 from .const import (
@@ -20,8 +22,11 @@ from .const import (
 )
 from .coordinator import WoHomeCoordinator
 from .dashboard import dashboard_url
+from .services import async_setup_services
 
 LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.SWITCH, Platform.SENSOR, Platform.SELECT, Platform.NUMBER,
@@ -35,6 +40,11 @@ class WoHomeData:
 
 
 type WoHomeConfigEntry = ConfigEntry[WoHomeData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WoHomeConfigEntry) -> bool:
