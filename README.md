@@ -64,6 +64,9 @@ they cannot fall back to HLS unless the camera also supports it.
 
 WebRTC signaling uses a signed, expiring Home Assistant URL scoped to the selected camera.
 The station receives no general Home Assistant credentials. Treat this URL as a secret.
+HLS playback, including the fallback, uses a Home Assistant stream token that is not tied to
+the signed URL's expiry. Anyone who obtains that token can access the stream while it remains
+active. Keep stream URLs private and use this prototype only on a trusted network.
 WebRTC additionally requires reachable ICE candidates: a working dashboard or signaling connection alone
 does not prove that video packets can reach the station. Separate networks may require configured
 go2rtc candidates, firewall rules, or a TURN server. The native player uses ICE servers supplied by HA.

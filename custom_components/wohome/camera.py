@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 import json
 
 from aiohttp import web, WSMsgType
@@ -55,8 +54,12 @@ class WoHomeCameraView(HomeAssistantView):
             data = message.as_dict()
             if data["type"] == "error":
                 data = {"type": "error"}
-            with suppress(asyncio.QueueFull):
+            if data["type"] == "candidate" and queue.qsize() >= queue.maxsize - 1:
+                return
+            try:
                 queue.put_nowait(data)
+            except asyncio.QueueFull:
+                asyncio.create_task(ws.close(code=1011))
 
         async def send_messages() -> None:
             while True:
@@ -66,10 +69,10 @@ class WoHomeCameraView(HomeAssistantView):
             nonlocal offer_ready
             try:
                 await camera.async_handle_async_webrtc_offer(sdp, session_id, send_message)
-                offer_ready = True
                 for candidate in pending_candidates:
                     await camera.async_on_webrtc_candidate(session_id, candidate)
                 pending_candidates.clear()
+                offer_ready = True
             except Exception:
                 await queue.put({"type": "error"})
 
