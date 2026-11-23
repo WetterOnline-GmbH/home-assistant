@@ -17,7 +17,7 @@ class DashboardOption:
 
 
 def dashboard_options(hass: HomeAssistant) -> list[DashboardOption]:
-    options: list[DashboardOption] = []
+    options = [DashboardOption("", "Kein Dashboard" if hass.config.language.startswith("de") else "No dashboard")]
     seen: set[str] = set()
     lovelace_data = hass.data.get(LOVELACE_DATA)
     dashboards = getattr(lovelace_data, "dashboards", {}).values()
@@ -34,7 +34,7 @@ def dashboard_options(hass: HomeAssistant) -> list[DashboardOption]:
 
     if DEFAULT_DASHBOARD_PATH not in seen:
         options.insert(
-            0,
+            1,
             DashboardOption(
                 path=DEFAULT_DASHBOARD_PATH,
                 label="Overview (/lovelace)",
@@ -44,6 +44,8 @@ def dashboard_options(hass: HomeAssistant) -> list[DashboardOption]:
 
 
 def dashboard_url(hass: HomeAssistant, dashboard_path: str) -> str:
+    if not dashboard_path:
+        return ""
     try:
         base_url = get_url(
             hass,

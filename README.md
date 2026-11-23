@@ -18,8 +18,8 @@ Custom integration for connecting WOHome stations locally to Home Assistant.
 - Home Assistant 2026.11.1 or newer for the camera action (earlier versions have not been tested)
 - Home Assistant feature enabled in the WOHome developer settings
 
-The station API has no authentication. Any device that can reach the station on port `8080`
-can send commands; keep it on a private home network and do not forward this port to the Internet.
+The station API requires pairing and HTTPS with certificate pinning. Never forward port `8080` to the Internet.
+Existing unpaired entries can be paired via **Reconfigure** after updating both the station and this integration.
 
 ## Installation
 
@@ -34,6 +34,7 @@ can send commands; keep it on a private home network and do not forward this por
   - If you are on a different network add it manually **Settings → Devices & Services → Add Integration → WetterOnline Home**.
 
 After setup, the dashboard can be customized via the `Dashboard` select entity in the configuration section of the respective device.
+Choose **No dashboard** there to hide the dashboard button on the station; select a dashboard again to show it.
 
 ## Camera dialog
 
@@ -64,8 +65,10 @@ they cannot fall back to HLS unless the camera also supports it.
 WebRTC signaling uses a signed, expiring Home Assistant URL scoped to the selected camera.
 The station receives no general Home Assistant credentials. Treat this URL as a secret.
 HLS playback, including the fallback, uses a Home Assistant stream token that is not tied to
-the signed URL's expiry. Anyone who obtains that token can access the stream while it remains
-active. This is an accepted risk for operation on private home networks; keep stream URLs private.
+the signed URL's expiry. The device API now transfers these URLs over HTTPS, but the subsequent
+video and dashboard requests still use the configured Home Assistant URL. If that URL is HTTP,
+anyone who can observe that network traffic may obtain the stream token or dashboard login.
+Use HTTPS for Home Assistant if the home network is not trusted.
 WebRTC additionally requires reachable ICE candidates: a working dashboard or signaling connection alone
 does not prove that video packets can reach the station. Separate networks may require configured
 go2rtc candidates, firewall rules, or a TURN server. The native player uses ICE servers supplied by HA.
@@ -87,7 +90,7 @@ device value of 1. Use **Automatically adjust screen brightness** to enable the 
 
 ## Development
 
-The integration communicates via the local WOHome API v1 on port `8080`. Before installation, you can verify the syntax and Home Assistant configuration as follows, for example:
+The integration communicates via the local WOHome API v2 over HTTPS on port `8080`. Before installation, you can verify the syntax and Home Assistant configuration as follows, for example:
 
 ```shell
 python3 -m compileall -q custom_components/wohome

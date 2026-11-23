@@ -12,11 +12,22 @@
       "zeroconf_confirm": {
         "title": "WetterOnline Home",
         "description": "Möchtest du {name} einrichten?"
+      },
+      "pairing": {
+        "title": "WetterOnline Home verbinden",
+        "description": "Vergleiche {code} mit dem Code auf dem Display. Bestätige zuerst dort und fahre dann hier fort. Bei unterschiedlichen Codes nicht bestätigen."
+      },
+      "reconfigure": {
+        "title": "WetterOnline Home erneut verbinden",
+        "description": "Verbinde das bestehende Gerät, ohne seine Entitäten oder Automationen zu löschen.",
+        "data": {"host": "Host", "port": "Port"}
       }
     },
     "error": {
       "cannot_connect": "Verbindung zu WetterOnline Home nicht möglich",
-      "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version"
+      "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version",
+      "not_confirmed": "Bitte zuerst am Display bestätigen oder die Einrichtung nach Ablauf erneut starten",
+      "wrong_device": "Unter dieser Adresse ist ein anderes WetterOnline-Home-Gerät erreichbar"
     },
     "abort": {
       "already_configured": "Dieses Gerät ist bereits konfiguriert",
