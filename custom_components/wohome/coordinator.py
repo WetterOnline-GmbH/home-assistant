@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -50,6 +50,10 @@ class WoHomeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.get_state()
         except (ClientError, TimeoutError, OSError) as error:
+            if isinstance(error, ClientResponseError) and error.status == 401:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN, translation_key="pairing_required"
+                ) from error
             raise UpdateFailed(str(error)) from error
 
     @property

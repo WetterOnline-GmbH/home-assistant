@@ -4,7 +4,7 @@ from typing import Any
 import hashlib
 import secrets
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, SOURCE_RECONFIGURE
@@ -167,6 +167,8 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             nonce = secrets.token_urlsafe(32)
             try:
                 ticket, certificate = await api.start_pairing(nonce)
+            except ClientResponseError as error:
+                return self.async_abort(reason="pairing_unavailable" if error.status == 409 else "cannot_connect")
             except (ClientError, TimeoutError, OSError, ValueError, KeyError):
                 return self.async_abort(reason="cannot_connect")
             digest = hashlib.sha256(certificate + nonce.encode("ascii") + ticket.encode("ascii")).digest()

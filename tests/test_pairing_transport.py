@@ -7,15 +7,20 @@ import secrets
 import ssl
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from aiohttp import ClientSession, ServerFingerprintMismatch, web
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
+from homeassistant.exceptions import ConfigEntryError
 
 from custom_components.wohome.api import WoHomeApi
+from custom_components.wohome.config_flow import WoHomeConfigFlow
 from custom_components.wohome.const import API_PATH
+from custom_components.wohome.coordinator import WoHomeCoordinator
 
 
 async def check() -> None:
@@ -32,6 +37,8 @@ async def check() -> None:
         return web.json_response({"id": "test", "api_version": 2})
 
     async def start(request):
+        if state.get("key"):
+            return web.Response(status=409)
         state["nonce"] = (await request.json())["nonce"]
         state["ticket"] = secrets.token_urlsafe(32)
         return web.json_response({"ticket": state["ticket"]})
@@ -72,6 +79,11 @@ async def check() -> None:
             async with ClientSession() as session:
                 api = WoHomeApi(session, "127.0.0.1", port)
                 assert (await api.get_info())["id"] == "test"
+                try:
+                    await WoHomeCoordinator._async_update_data(SimpleNamespace(api=api))
+                    raise AssertionError("missing credential accepted")
+                except ConfigEntryError as error:
+                    assert error.translation_key == "pairing_required"
                 nonce = secrets.token_urlsafe(32)
                 ticket, observed_cert = await api.start_pairing(nonce)
                 assert observed_cert == der
@@ -81,6 +93,14 @@ async def check() -> None:
                 await api.complete_pairing(ticket, secret, observed_cert)
                 paired = WoHomeApi(session, "127.0.0.1", port, secret, hashlib.sha256(der).hexdigest())
                 assert (await paired.get_state())["ok"]
+                flow = WoHomeConfigFlow()
+                flow.hass = None
+                flow._discovered_values = {"host": "127.0.0.1", "port": port}
+                with patch.object(flow, "_set_confirm_only"), patch(
+                    "custom_components.wohome.config_flow.async_get_clientsession", return_value=session
+                ):
+                    result = await flow.async_step_pairing()
+                assert result["reason"] == "pairing_unavailable"
                 try:
                     await WoHomeApi(session, "127.0.0.1", port, secret).get_state()
                     raise AssertionError("credential sent without certificate pin")

@@ -34,7 +34,13 @@
       "no_device_id": "Das erkannte Gerät hat keine stabile ID geliefert",
       "not_wohome": "Der erkannte Dienst ist kein WetterOnline-Home-Gerät",
       "cannot_connect": "Verbindung zu WetterOnline Home nicht möglich",
+      "pairing_unavailable": "Kopplung derzeit nicht möglich. Warte und versuche es erneut. Falls das Gerät bereits mit einer anderen Home-Assistant-Instanz gekoppelt ist, trenne diese Verbindung zuerst am Gerät.",
       "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version"
+    }
+  },
+  "exceptions": {
+    "pairing_required": {
+      "message": "Keine gültige Kopplung mit wetteronline home. Trenne gegebenenfalls die bisherige Verbindung am Gerät und wähle für diesen Eintrag „Neu konfigurieren“."
     }
   },
   "services": {
