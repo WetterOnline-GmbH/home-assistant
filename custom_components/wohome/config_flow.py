@@ -7,10 +7,8 @@ import secrets
 from aiohttp import ClientError, ClientResponseError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow, SOURCE_RECONFIGURE
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, SOURCE_RECONFIGURE
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import callback
-from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -18,27 +16,17 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .api import WoHomeApi
 from .const import (
     API_VERSION,
-    CONF_DASHBOARD_MODE,
-    CONF_DASHBOARD_PATH,
     CONF_PORT,
-    DEFAULT_DASHBOARD_PATH,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
     MANUFACTURER,
     MODEL,
-    MANUAL_DASHBOARD,
 )
-from .dashboard import dashboard_url
 
 
 class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: Any) -> OptionsFlow:
-        return WoHomeOptionsFlow()
 
     def __init__(self) -> None:
         self._discovered_values: dict[str, Any] = {}
@@ -208,39 +196,3 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
 def _device_name(device_id: str) -> str:
     return f"wohome4-{device_id}"
-
-
-class WoHomeOptionsFlow(OptionsFlow):
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            path = user_input[CONF_DASHBOARD_PATH].strip()
-            try:
-                if not path:
-                    raise ValueError("Empty dashboard URL")
-                url = dashboard_url(self.hass, path)
-            except ValueError:
-                errors["base"] = "invalid_dashboard_url"
-            except NoURLAvailableError:
-                errors["base"] = "dashboard_failed"
-            else:
-                try:
-                    await self.config_entry.runtime_data.api.set_dashboard(url)
-                except (ClientError, TimeoutError, OSError):
-                    errors["base"] = "dashboard_failed"
-                else:
-                    return self.async_create_entry(data={
-                        **self.config_entry.options,
-                        CONF_DASHBOARD_MODE: MANUAL_DASHBOARD,
-                        CONF_DASHBOARD_PATH: path,
-                    })
-
-        current_path = self.config_entry.options.get(
-            CONF_DASHBOARD_PATH,
-            self.config_entry.data.get(CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH),
-        )
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({vol.Required(CONF_DASHBOARD_PATH, default=current_path): str}),
-            errors=errors,
-        )

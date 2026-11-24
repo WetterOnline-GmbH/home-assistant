@@ -99,7 +99,7 @@ class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
         else:
             options.pop(CONF_DASHBOARD_MODE, None)
         self._hass.config_entries.async_update_entry(self._entry, options=options)
-        self.async_write_ha_state()
+        self.coordinator.async_update_listeners()
 
     @property
     def _dashboard_options(self) -> list[DashboardOption]:
