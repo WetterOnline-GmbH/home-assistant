@@ -41,8 +41,6 @@
     "unsupported_api": {"message": "The device uses an unsupported API version."},
     "device_action_failed": {"message": "Could not control wetteronline home. Check its connection and pairing."},
     "dashboard_failed": {"message": "Could not send the dashboard to wetteronline home. Check the Home Assistant address and device connection."},
-    "invalid_dashboard_url": {"message": "Enter a path starting with / or a full HTTP(S) URL without credentials."},
-    "manual_dashboard_required": {"message": "Select Manual under Dashboard before editing the URL."},
     "unknown_dashboard": {"message": "The selected dashboard is no longer available."},
     "camera_station_unavailable": {"message": "Select an available wetteronline home device."},
     "camera_unsupported": {"message": "Update the device app and reload the integration to enable the camera."},
@@ -71,9 +69,6 @@
       "dashboard": {
         "name": "Dashboard"
       }
-    },
-    "text": {
-      "dashboard_url": {"name": "Dashboard path or URL"}
     },
     "switch": {
       "auto_brightness": {

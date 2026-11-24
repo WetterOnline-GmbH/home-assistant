@@ -7,9 +7,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import WoHomeConfigEntry
-from .const import CONF_DASHBOARD_PATH
 
-TO_REDACT = {CONF_HOST, CONF_DASHBOARD_PATH, "key"}
+TO_REDACT = {CONF_HOST, "key"}
 
 
 async def async_get_config_entry_diagnostics(

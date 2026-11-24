@@ -11,8 +11,6 @@ API_PATH = "/api/v2"
 CONF_NAME = "name"
 CONF_PORT = "port"
 CONF_DASHBOARD_PATH = "dashboard_path"
-CONF_DASHBOARD_MODE = "dashboard_mode"
-MANUAL_DASHBOARD = "manual"
 
 DEFAULT_DASHBOARD_PATH = "/lovelace"
 
