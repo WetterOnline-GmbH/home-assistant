@@ -11,7 +11,7 @@ from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WoHomeConfigEntry
-from .const import CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH
+from .const import CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH, DOMAIN
 from .coordinator import WoHomeCoordinator
 from .dashboard import DashboardOption, dashboard_options, dashboard_url
 
@@ -80,14 +80,14 @@ class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
             None,
         )
         if selected is None:
-            raise ValueError(f"Unknown dashboard: {option}")
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="unknown_dashboard")
 
         try:
             url = dashboard_url(self._hass, selected.path)
             await self.coordinator.api.set_dashboard(url)
         except (ClientError, TimeoutError, OSError, NoURLAvailableError) as error:
             raise HomeAssistantError(
-                f"Could not set WoHome dashboard to {selected.label}: {error}"
+                translation_domain=DOMAIN, translation_key="dashboard_failed"
             ) from error
 
         self._hass.config_entries.async_update_entry(

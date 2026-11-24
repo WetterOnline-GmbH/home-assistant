@@ -29,16 +29,16 @@ Existing unpaired entries can be paired via **Reconfigure** after updating both 
    - Add the URL to the repository. (https://github.com/WetterOnline-GmbH/home-assistant)
    - Select “integration” as the type.
    - Click the “ADD” button.
-1. Search for "WetterOnline Home" in HACS and install the integration
+1. Search for "wetteronline home" in HACS and install the integration
 1. Add the automatically detected WOHome under **Settings → Devices & Services**.
-  - If you are on a different network add it manually **Settings → Devices & Services → Add Integration → WetterOnline Home**.
+  - If you are on a different network add it manually **Settings → Devices & Services → Add Integration → wetteronline home**.
 
 After setup, the dashboard can be customized via the `Dashboard` select entity in the configuration section of the respective device.
 Choose **No dashboard** there to hide the dashboard button on the station; select a dashboard again to show it.
 
 ## Camera dialog
 
-Use **WetterOnline Home: Show camera** in an automation or under **Developer Tools → Actions**.
+Use **wetteronline home: Show camera** in an automation or under **Developer Tools → Actions**.
 Select the station and a camera entity; no stream URL or camera credentials are required.
 The station wakes up, displays the video without audio, and closes it after 30 seconds by default.
 An incoming camera replaces the current video; repeated requests reset the display duration.

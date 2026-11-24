@@ -2,43 +2,50 @@
   "config": {
     "step": {
       "user": {
-        "title": "WetterOnline Home",
-        "description": "Set up the discovered WetterOnline Home device.",
+        "title": "wetteronline home",
         "data": {
           "host": "Host",
           "port": "Port"
         }
       },
       "zeroconf_confirm": {
-        "title": "WetterOnline Home",
+        "title": "wetteronline home",
         "description": "Do you want to set up {name}?"
       },
       "pairing": {
-        "title": "Connect WetterOnline Home",
+        "title": "Connect wetteronline home",
         "description": "Compare {code} with the code on the display. Confirm on the display first, then continue here. Do not continue if they differ."
       },
       "reconfigure": {
-        "title": "Reconnect WetterOnline Home",
+        "title": "Reconnect wetteronline home",
         "description": "Connect this existing device without deleting its entities or automations.",
         "data": {"host": "Host", "port": "Port"}
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to WetterOnline Home",
+      "cannot_connect": "Cannot connect to wetteronline home",
       "unsupported_api": "The device uses an unsupported API version",
       "not_confirmed": "Confirm pairing on the display first, or restart setup if it timed out",
-      "wrong_device": "This address belongs to a different WetterOnline Home device"
+      "wrong_device": "This address belongs to a different wetteronline home device"
     },
     "abort": {
       "already_configured": "This device is already configured",
       "no_device_id": "The discovered device did not provide a stable id",
-      "not_wohome": "The discovered service is not a WetterOnline Home device",
-      "cannot_connect": "Cannot connect to WetterOnline Home",
+      "not_wohome": "The discovered service is not a wetteronline home device",
+      "cannot_connect": "Cannot connect to wetteronline home",
       "pairing_unavailable": "Pairing is currently unavailable. Wait and try again. If the device is already paired with another Home Assistant instance, disconnect it on the device first.",
       "unsupported_api": "The device uses an unsupported API version"
     }
   },
   "exceptions": {
+    "unsupported_api": {"message": "The device uses an unsupported API version."},
+    "device_action_failed": {"message": "Could not control wetteronline home. Check its connection and pairing."},
+    "dashboard_failed": {"message": "Could not send the dashboard to wetteronline home. Check the Home Assistant address and device connection."},
+    "unknown_dashboard": {"message": "The selected dashboard is no longer available."},
+    "camera_station_unavailable": {"message": "Select an available wetteronline home device."},
+    "camera_unsupported": {"message": "Update the device app and reload the integration to enable the camera."},
+    "camera_not_found": {"message": "Select an existing camera entity."},
+    "camera_failed": {"message": "Could not open the camera. Check streaming support and the connection to the device."},
     "pairing_required": {
       "message": "No valid pairing with wetteronline home. If needed, disconnect the existing pairing on the device, then select Reconfigure for this entry."
     }

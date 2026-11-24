@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 DOMAIN = "wohome"
-DEFAULT_NAME = "WetterOnline Home"
+DEFAULT_NAME = "wetteronline home"
 DEFAULT_PORT = 8080
 UPDATE_INTERVAL = timedelta(seconds=60)
 

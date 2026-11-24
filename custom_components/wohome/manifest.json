@@ -1,6 +1,6 @@
 {
   "domain": "wohome",
-  "name": "WetterOnline Home",
+  "name": "wetteronline home",
   "codeowners": ["@WetterOnline-GmbH"],
   "config_flow": true,
   "dependencies": ["camera", "http", "lovelace", "stream"],

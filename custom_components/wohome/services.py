@@ -46,9 +46,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             and entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED
         ]
         if len(entries) != 1:
-            raise ServiceValidationError("Select an available WetterOnline Home device")
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="camera_station_unavailable")
         if not entries[0].runtime_data.coordinator.info.get("camera_control"):
-            raise ServiceValidationError("Update the station app and reload the integration to enable the camera dialog")
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="camera_unsupported")
         entity_id = call.data["camera_entity_id"]
         if user_id := call.context.user_id:
             user = await hass.auth.async_get_user(user_id)
@@ -63,7 +63,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     raise Unauthorized()
         camera = hass.states.get(entity_id)
         if not entity_id.startswith("camera.") or camera is None:
-            raise ServiceValidationError("Select an existing camera entity")
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="camera_not_found")
         title = str(camera.attributes.get("friendly_name") or entity_id).strip()[:120] or entity_id
         try:
             async with asyncio.timeout(30):
@@ -83,7 +83,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     )
         except (HomeAssistantError, ClientError, OSError, TimeoutError):
             raise HomeAssistantError(
-                "Could not open the camera. Check streaming support and connectivity between Home Assistant and the station."
+                translation_domain=DOMAIN, translation_key="camera_failed"
             ) from None
 
     hass.services.async_register(

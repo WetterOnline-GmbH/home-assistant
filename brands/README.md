@@ -1,4 +1,4 @@
-# Brand assets for the WetterOnline Home integration
+# Brand assets for the wetteronline home integration
 
 These files are **not** used by the integration at runtime. Home Assistant
 serves integration icons and logos from the central

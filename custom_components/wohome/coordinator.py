@@ -44,7 +44,7 @@ class WoHomeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_setup(self) -> None:
         self.info = await self.api.get_info()
         if self.info.get("api_version") != API_VERSION:
-            raise ConfigEntryError("Unsupported WoHome API version")
+            raise ConfigEntryError(translation_domain=DOMAIN, translation_key="unsupported_api")
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:

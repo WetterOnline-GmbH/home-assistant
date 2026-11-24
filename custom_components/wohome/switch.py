@@ -9,6 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WoHomeConfigEntry
+from .const import DOMAIN
 from .coordinator import WoHomeCoordinator
 
 PARALLEL_UPDATES = 1 # no parallel updates to avoid race conditions
@@ -47,7 +48,7 @@ class WoHomeDisplaySwitch(CoordinatorEntity[WoHomeCoordinator], SwitchEntity):
             await self.coordinator.api.set_display(True)
         except (ClientError, TimeoutError, OSError) as error:
             raise HomeAssistantError(
-                f"Could not turn on the WoHome display: {error}"
+                translation_domain=DOMAIN, translation_key="device_action_failed"
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -56,7 +57,7 @@ class WoHomeDisplaySwitch(CoordinatorEntity[WoHomeCoordinator], SwitchEntity):
             await self.coordinator.api.set_display(False)
         except (ClientError, TimeoutError, OSError) as error:
             raise HomeAssistantError(
-                f"Could not turn off the WoHome display: {error}"
+                translation_domain=DOMAIN, translation_key="device_action_failed"
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -90,6 +91,6 @@ class WoHomeAutoBrightnessSwitch(CoordinatorEntity[WoHomeCoordinator], SwitchEnt
             await self.coordinator.api.set_auto_brightness(enabled)
         except (ClientError, TimeoutError, OSError) as error:
             raise HomeAssistantError(
-                f"Could not update WoHome automatic brightness: {error}"
+                translation_domain=DOMAIN, translation_key="device_action_failed"
             ) from error
         await self.coordinator.async_request_refresh()

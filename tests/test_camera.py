@@ -111,7 +111,9 @@ def test_stream_failure_does_not_expose_sensitive_url(monkeypatch):
     resolve.side_effect = HomeAssistantError("rtsp://user:secret@camera.example/stream")
     with pytest.raises(HomeAssistantError) as error:
         asyncio.run(handler(call))
-    assert "secret" not in str(error.value)
+    assert error.value.translation_key == "camera_failed"
+    assert "secret" not in repr(error.value.args)
+    assert error.value.translation_placeholders is None
     assert error.value.__suppress_context__
     entry.runtime_data.api.open_camera.assert_not_awaited()
 

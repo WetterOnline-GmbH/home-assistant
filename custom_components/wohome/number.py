@@ -8,6 +8,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WoHomeConfigEntry
+from .const import DOMAIN
 from .coordinator import WoHomeCoordinator
 
 PARALLEL_UPDATES = 1
@@ -52,5 +53,5 @@ class WoHomeBrightness(CoordinatorEntity[WoHomeCoordinator], NumberEntity):
             brightness = round(value * MAX_DEVICE_BRIGHTNESS / 100)
             await self.coordinator.api.set_brightness(max(MIN_DEVICE_BRIGHTNESS, brightness))
         except (ClientError, TimeoutError, OSError) as error:
-            raise HomeAssistantError(f"Could not set WoHome brightness: {error}") from error
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="device_action_failed") from error
         await self.coordinator.async_request_refresh()
