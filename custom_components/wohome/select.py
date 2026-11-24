@@ -11,7 +11,7 @@ from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WoHomeConfigEntry
-from .const import CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH, DOMAIN
+from .const import CONF_DASHBOARD_MODE, CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH, DOMAIN, MANUAL_DASHBOARD
 from .coordinator import WoHomeCoordinator
 from .dashboard import DashboardOption, dashboard_options, dashboard_url
 
@@ -60,12 +60,14 @@ class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
 
     @property
     def current_option(self) -> str | None:
+        if self._entry.options.get(CONF_DASHBOARD_MODE) == MANUAL_DASHBOARD:
+            return self._dashboard_options[-1].label
         current_path = self._current_path
         return next(
             (
                 option.label
                 for option in self._dashboard_options
-                if option.path == current_path
+                if option.path is not None and option.path == current_path
             ),
             None,
         )
@@ -82,21 +84,21 @@ class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
         if selected is None:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="unknown_dashboard")
 
+        path = self._current_path if selected.path is None else selected.path
         try:
-            url = dashboard_url(self._hass, selected.path)
+            url = dashboard_url(self._hass, path)
             await self.coordinator.api.set_dashboard(url)
-        except (ClientError, TimeoutError, OSError, NoURLAvailableError) as error:
+        except (ClientError, TimeoutError, OSError, NoURLAvailableError, ValueError) as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="dashboard_failed"
             ) from error
 
-        self._hass.config_entries.async_update_entry(
-            self._entry,
-            options={
-                **self._entry.options,
-                CONF_DASHBOARD_PATH: selected.path,
-            },
-        )
+        options = {**self._entry.options, CONF_DASHBOARD_PATH: path}
+        if selected.path is None:
+            options[CONF_DASHBOARD_MODE] = MANUAL_DASHBOARD
+        else:
+            options.pop(CONF_DASHBOARD_MODE, None)
+        self._hass.config_entries.async_update_entry(self._entry, options=options)
         self.async_write_ha_state()
 
     @property

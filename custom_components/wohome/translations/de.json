@@ -37,6 +37,19 @@
       "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Manuelles Dashboard",
+        "description": "Dashboard-Pfad wie /lovelace oder vollständige HTTP(S)-URL eingeben. Die bisherige Auswahl wird ersetzt.",
+        "data": {"dashboard_path": "Dashboard-Pfad oder URL"}
+      }
+    },
+    "error": {
+      "invalid_dashboard_url": "Pfad mit / oder vollständige HTTP(S)-URL ohne Zugangsdaten eingeben",
+      "dashboard_failed": "Dashboard-URL konnte nicht an das Gerät gesendet werden"
+    }
+  },
   "exceptions": {
     "unsupported_api": {"message": "Das Gerät verwendet eine nicht unterstützte API-Version."},
     "device_action_failed": {"message": "wetteronline home konnte nicht gesteuert werden. Prüfe Verbindung und Kopplung."},

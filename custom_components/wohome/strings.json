@@ -37,6 +37,19 @@
       "unsupported_api": "The device uses an unsupported API version"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Manual dashboard",
+        "description": "Enter a dashboard path such as /lovelace or a full HTTP(S) URL. This replaces the current dashboard selection.",
+        "data": {"dashboard_path": "Dashboard path or URL"}
+      }
+    },
+    "error": {
+      "invalid_dashboard_url": "Enter a path starting with / or a full HTTP(S) URL without credentials",
+      "dashboard_failed": "Could not send the dashboard URL to the device"
+    }
+  },
   "exceptions": {
     "unsupported_api": {"message": "The device uses an unsupported API version."},
     "device_action_failed": {"message": "Could not control wetteronline home. Check its connection and pairing."},

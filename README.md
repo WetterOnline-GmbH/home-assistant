@@ -35,6 +35,10 @@ Existing unpaired entries can be paired via **Reconfigure** after updating both 
 
 After setup, the dashboard can be customized via the `Dashboard` select entity in the configuration section of the respective device.
 Choose **No dashboard** there to hide the dashboard button on the station; select a dashboard again to show it.
+Choose **Manual** to keep the current path until you change it via **Configure** on the integration entry.
+There you can enter a path such as `/lovelace` or a full `http://` or `https://` URL reachable from the station.
+Configuring a manual URL replaces the selection; choosing another dashboard or **No dashboard** overwrites the manual value.
+Only use URLs you trust: the station opens the page in its browser. Do not put credentials in the URL.
 
 ## Camera dialog
 

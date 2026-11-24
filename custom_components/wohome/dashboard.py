@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.core import HomeAssistant
@@ -12,7 +12,7 @@ from .const import DEFAULT_DASHBOARD_PATH
 
 @dataclass(frozen=True)
 class DashboardOption:
-    path: str
+    path: str | None
     label: str
 
 
@@ -40,12 +40,27 @@ def dashboard_options(hass: HomeAssistant) -> list[DashboardOption]:
                 label="Overview (/lovelace)",
             ),
         )
+    options.append(DashboardOption(None, "Manuell" if hass.config.language.startswith("de") else "Manual"))
     return options
 
 
 def dashboard_url(hass: HomeAssistant, dashboard_path: str) -> str:
     if not dashboard_path:
         return ""
+    if len(dashboard_path) > 2048 or any(ord(char) < 32 or char.isspace() for char in dashboard_path):
+        raise ValueError("Invalid dashboard URL")
+    parsed = urlsplit(dashboard_path)
+    if parsed.fragment:
+        raise ValueError("Invalid dashboard URL")
+    if parsed.scheme or parsed.netloc:
+        if (parsed.scheme.lower() not in ("http", "https") or not parsed.hostname
+                or parsed.username is not None or parsed.password is not None):
+            raise ValueError("Invalid dashboard URL")
+        if parsed.port is not None and parsed.port not in range(1, 65536):
+            raise ValueError("Invalid dashboard URL")
+        return dashboard_path
+    if not dashboard_path.startswith("/") or dashboard_path.startswith("//"):
+        raise ValueError("Invalid dashboard path")
     try:
         base_url = get_url(
             hass,
