@@ -13,16 +13,23 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError, Unauthorized
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, target
 
 from .const import DOMAIN
 from .dashboard import dashboard_url
 from .camera import CAMERA_WEBRTC_PATH, WoHomeCameraView
 
 SERVICE_OPEN_CAMERA = "open_camera"
+SERVICE_OPEN_CAMERA_ON_TARGET = "open_camera_on_target"
 OPEN_CAMERA_SCHEMA = vol.Schema(
     {
         vol.Required("device_id"): cv.string,
+        vol.Required("camera_entity_id"): cv.entity_id,
+        vol.Optional("duration", default=30): vol.All(cv.positive_int, vol.Range(min=1, max=300)),
+    }
+)
+OPEN_CAMERA_TARGET_SCHEMA = cv.make_entity_service_schema(
+    {
         vol.Required("camera_entity_id"): cv.entity_id,
         vol.Optional("duration", default=30): vol.All(cv.positive_int, vol.Range(min=1, max=300)),
     }
@@ -88,4 +95,55 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN, SERVICE_OPEN_CAMERA, open_camera, schema=OPEN_CAMERA_SCHEMA
+    )
+
+    async def open_camera_on_target(call: ServiceCall) -> None:
+        selection = target.TargetSelection(call.data)
+        target_all = call.data.get("entity_id") == "all"
+        if target_all:
+            entity_ids = set(hass.states.async_entity_ids("switch"))
+            if call.data.get("exclude"):
+                entity_ids -= target.async_extract_excluded_entity_ids(hass, selection)
+        else:
+            selected = target.async_extract_referenced_entity_ids(hass, selection)
+            entity_ids = selected.referenced | selected.indirectly_referenced
+
+        registry = er.async_get(hass)
+        displays = {}
+        for entity_id in entity_ids:
+            entity = registry.async_get(entity_id)
+            if entity is None or entity.platform != DOMAIN or entity.device_id is None:
+                continue
+            entry = hass.config_entries.async_get_entry(entity.config_entry_id)
+            if entry is None or entry.domain != DOMAIN:
+                continue
+            if entity.entity_id == registry.async_get_entity_id(
+                "switch", DOMAIN, f"{entry.unique_id or entry.entry_id}_display"
+            ):
+                displays[entity.device_id] = entity.entity_id
+
+        if not displays:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="camera_station_unavailable")
+        if user_id := call.context.user_id:
+            user = await hass.auth.async_get_user(user_id)
+            if user is None or not user.permissions.check_entity(call.data["camera_entity_id"], POLICY_READ):
+                raise Unauthorized(entity_id=call.data["camera_entity_id"])
+            if not user.is_admin:
+                allowed = {device_id: entity_id for device_id, entity_id in displays.items()
+                           if user.permissions.check_entity(entity_id, POLICY_CONTROL)}
+                if not target_all and len(allowed) != len(displays):
+                    raise Unauthorized()
+                displays = allowed
+                if not displays:
+                    raise Unauthorized()
+        for device_id in sorted(displays):
+            await hass.services.async_call(
+                DOMAIN, SERVICE_OPEN_CAMERA,
+                {"device_id": device_id, "camera_entity_id": call.data["camera_entity_id"],
+                 "duration": call.data["duration"]},
+                blocking=True, context=call.context,
+            )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_OPEN_CAMERA_ON_TARGET, open_camera_on_target, schema=OPEN_CAMERA_TARGET_SCHEMA
     )

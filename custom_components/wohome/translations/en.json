@@ -51,8 +51,16 @@
     }
   },
   "services": {
-    "open_camera": {
+    "open_camera_on_target": {
       "name": "Show camera",
+      "description": "Show a camera stream on the selected station display.",
+      "fields": {
+        "camera_entity_id": {"name": "Camera"},
+        "duration": {"name": "Display duration"}
+      }
+    },
+    "open_camera": {
+      "name": "Show camera (select station)",
       "description": "Show a camera stream in the station's video dialog.",
       "fields": {
         "device_id": {"name": "Station"},

@@ -31,7 +31,7 @@ def camera_action(monkeypatch):
     monkeypatch.setattr(services, "get_camera_from_entity_id", lambda *_: camera)
     monkeypatch.setattr(services, "dashboard_url", lambda _, path: "http://ha.example" + path)
     services.async_setup_services(hass)
-    handler = hass.services.async_register.call_args.args[2]
+    handler = hass.services.async_register.call_args_list[0].args[2]
     call = SimpleNamespace(context=SimpleNamespace(user_id=None), data=services.OPEN_CAMERA_SCHEMA({
         "device_id": "station", "camera_entity_id": "camera.door",
     }))
@@ -138,5 +138,40 @@ def test_camera_service_is_available_before_a_station_connects():
     hass.services.has_service.return_value = False
     assert asyncio.run(async_setup(hass, {}))
     hass.http.register_view.assert_called_once()
-    hass.services.async_register.assert_called_once()
+    assert hass.services.async_register.call_count == 2
     hass.config_entries.async_get_entry.assert_not_called()
+
+
+def test_target_all_without_exclude_on_older_home_assistant(monkeypatch):
+    hass, entry, _, _, _, _ = camera_action(monkeypatch)
+    entry.entry_id = "station-entry"
+    entities = services.er.async_get(hass)
+    entities.async_get.return_value = SimpleNamespace(
+        entity_id="switch.station_display", platform="wohome",
+        config_entry_id="station-entry", device_id="station",
+    )
+    hass.states.async_entity_ids.return_value = ["switch.station_display"]
+    hass.services.async_call = AsyncMock()
+    monkeypatch.delattr(services.target, "async_extract_excluded_entity_ids", raising=False)
+    handler = hass.services.async_register.call_args_list[1].args[2]
+    call = SimpleNamespace(
+        context=SimpleNamespace(user_id=None),
+        data=services.OPEN_CAMERA_TARGET_SCHEMA({
+            "entity_id": "all", "camera_entity_id": "camera.door",
+        }),
+    )
+    asyncio.run(handler(call))
+    hass.services.async_call.assert_awaited_once_with(
+        "wohome", "open_camera",
+        {"device_id": "station", "camera_entity_id": "camera.door", "duration": 30},
+        blocking=True, context=call.context,
+    )
+
+
+@pytest.mark.skipif(hasattr(services.cv, "TARGET_EXCLUDE_SCHEMA"), reason="Home Assistant supports exclusions")
+def test_older_home_assistant_rejects_exclude():
+    with pytest.raises(vol.Invalid):
+        services.OPEN_CAMERA_TARGET_SCHEMA({
+            "entity_id": "all", "camera_entity_id": "camera.door",
+            "exclude": {"entity_id": "switch.station_display"},
+        })

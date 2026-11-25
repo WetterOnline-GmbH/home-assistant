@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, SOURCE_RE
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import ConstantSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import WoHomeApi
@@ -71,10 +72,16 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         if user_input is None:
             self._set_confirm_only()
+            name = self._discovered_values[CONF_NAME]
             return self.async_show_form(
                 step_id="zeroconf_confirm",
+                data_schema=vol.Schema({
+                    vol.Optional("device"): ConstantSelector({
+                        "value": name, "label": f"Set up {name}?",
+                    }),
+                }),
                 description_placeholders={
-                    "name": self._discovered_values[CONF_NAME]
+                    "name": name
                 },
             )
 
@@ -181,8 +188,7 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await api.complete_pairing(ticket, key, certificate)
             except (ClientError, TimeoutError, OSError, ValueError):
-                return self.async_show_form(step_id="pairing", errors={"base": "not_confirmed"},
-                                            description_placeholders={"code": code})
+                return self._pairing_form(code, errors={"base": "not_confirmed"})
             data = {**self._discovered_values, "key": key,
                     "fingerprint": hashlib.sha256(certificate).hexdigest()}
             if self.source == SOURCE_RECONFIGURE:
@@ -191,7 +197,20 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             return self.async_create_entry(title=self._discovered_values[CONF_NAME], data=data)
 
-        return self.async_show_form(step_id="pairing", description_placeholders={"code": code})
+        return self._pairing_form(code)
+
+    def _pairing_form(self, code: str, errors: dict[str, str] | None = None) -> ConfigFlowResult:
+        return self.async_show_form(
+            step_id="pairing",
+            data_schema=vol.Schema({
+                vol.Optional("verification"): ConstantSelector({
+                    "value": code,
+                    "label": f"Compare {code} with the code on the device. Only continue if they match.",
+                }),
+            }),
+            description_placeholders={"code": code},
+            errors=errors or {},
+        )
 
 
 def _device_name(device_id: str) -> str:

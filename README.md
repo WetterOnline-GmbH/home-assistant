@@ -38,8 +38,13 @@ Choose **No dashboard** there to hide the dashboard button on the station; selec
 
 ## Camera dialog
 
-Use **wetteronline home: Show camera** in an automation or under **Developer Tools → Actions**.
+Use **wetteronline home: Show camera (select station)** in an automation or under **Developer Tools → Actions**.
 Select the station and a camera entity; no stream URL or camera credentials are required.
+In the automation editor, **By target → device** also offers **Show camera**.
+It targets the station's screen switch and can target several stations; the original
+`wohome.open_camera` action and its `device_id` field remain supported.
+The screen switch must be enabled and visible for device or area target expansion.
+Stations without camera support reject the action when it runs.
 The station wakes up, displays the video without audio, and closes it after 30 seconds by default.
 An incoming camera replaces the current video; repeated requests reset the display duration.
 Closing the dialog returns to the previous screen and restores standby if the display was initially off.
