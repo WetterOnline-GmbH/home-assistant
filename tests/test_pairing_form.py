@@ -2,9 +2,12 @@
 
 import asyncio
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
+from homeassistant.config_entries import ConfigEntryState, SOURCE_ZEROCONF
+from homeassistant.data_entry_flow import AbortFlow
+import pytest
 
 from custom_components.wohome.config_flow import WoHomeConfigFlow
 
@@ -47,3 +50,30 @@ def test_discovery_confirmation_visible_without_translation():
         form = asyncio.run(flow.async_step_zeroconf_confirm())
     assert form["data_schema"]({}) == {}
     assert next(iter(form["data_schema"].schema.values())).config == {"value": "Test station"}
+
+
+def test_rediscovery_updates_address_and_reloads_existing_entry():
+    entry = SimpleNamespace(
+        entry_id="existing", source=SOURCE_ZEROCONF, state=ConfigEntryState.LOADED,
+        update_listeners=[],
+        data={"host": "192.0.2.1", "port": 8080, "key": "test-key", "fingerprint": "test-pin"},
+    )
+    entries = Mock()
+    entries.flow.async_progress_by_handler.return_value = []
+    entries.async_entry_for_domain_unique_id.return_value = entry
+    entries.async_update_entry.return_value = True
+    flow = WoHomeConfigFlow()
+    flow.handler = "wohome"
+    flow.context = {"source": SOURCE_ZEROCONF}
+    flow.hass = SimpleNamespace(config_entries=entries)
+    discovery = SimpleNamespace(
+        host="192.0.2.2", port=8080,
+        properties={"id": "test-id", "model": "WOH4", "manufacturer": "WetterOnline"},
+    )
+
+    with pytest.raises(AbortFlow) as exc:
+        asyncio.run(flow.async_step_zeroconf(discovery))
+
+    assert exc.value.reason == "already_configured"
+    entries.async_update_entry.assert_called_once_with(entry, data={**entry.data, "host": "192.0.2.2"})
+    entries.async_schedule_reload.assert_called_once_with(entry.entry_id)

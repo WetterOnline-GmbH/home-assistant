@@ -16,6 +16,10 @@
         "title": "Connect wetteronline home",
         "description": "Compare the code below with the display. Confirm on the display first, then continue here. Do not continue if they differ."
       },
+      "reauth_confirm": {
+        "title": "Reconnect wetteronline home",
+        "description": "The device no longer accepts this pairing. Continue to start pairing again without removing the device from Home Assistant."
+      },
       "reconfigure": {
         "title": "Reconnect wetteronline home",
         "description": "Connect this existing device without deleting its entities or automations.",
@@ -29,6 +33,8 @@
       "wrong_device": "This address belongs to a different wetteronline home device"
     },
     "abort": {
+      "reauth_successful": "wetteronline home has been reconnected",
+      "wrong_device": "This address belongs to a different wetteronline home device. Use Reconfigure to change the address.",
       "already_configured": "This device is already configured",
       "no_device_id": "The discovered device did not provide a stable id",
       "not_wohome": "The discovered service is not a wetteronline home device",
@@ -47,7 +53,7 @@
     "camera_not_found": {"message": "Select an existing camera entity."},
     "camera_failed": {"message": "Could not open the camera. Check streaming support and the connection to the device."},
     "pairing_required": {
-      "message": "No valid pairing with wetteronline home. If needed, disconnect the existing pairing on the device, then select Reconfigure for this entry."
+      "message": "No valid pairing with wetteronline home. Reauthenticate to connect the device again."
     }
   },
   "services": {

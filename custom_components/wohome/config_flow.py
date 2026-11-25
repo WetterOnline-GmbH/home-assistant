@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 import hashlib
 import secrets
@@ -7,7 +8,12 @@ import secrets
 from aiohttp import ClientError, ClientResponseError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, SOURCE_RECONFIGURE
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -163,14 +169,40 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         api = WoHomeApi(async_get_clientsession(self.hass), host, port)
         return await api.get_info()
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is None:
+            self._set_confirm_only()
+            return self.async_show_form(step_id="reauth_confirm")
+        entry = self._get_reauth_entry()
+        self._discovered_values = {
+            CONF_HOST: entry.data[CONF_HOST],
+            CONF_PORT: entry.data.get(CONF_PORT, DEFAULT_PORT),
+        }
+        return await self.async_step_pairing()
+
     async def async_step_pairing(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         self._set_confirm_only()
         if self._pairing is None:
             host = self._discovered_values[CONF_HOST]
             port = self._discovered_values[CONF_PORT]
-            api = WoHomeApi(async_get_clientsession(self.hass), host, port)
+            entry = self._get_reauth_entry() if self.source == SOURCE_REAUTH else None
+            api = WoHomeApi(
+                async_get_clientsession(self.hass), host, port,
+                fingerprint=entry.data.get("fingerprint") if entry else None,
+            )
             nonce = secrets.token_urlsafe(32)
             try:
+                if entry is not None:
+                    info = await api.get_info()
+                    if info.get("api_version") != API_VERSION:
+                        return self.async_abort(reason="unsupported_api")
+                    if not entry.unique_id or info.get("id") != entry.unique_id:
+                        return self.async_abort(reason="wrong_device")
                 ticket, certificate = await api.start_pairing(nonce)
             except ClientResponseError as error:
                 return self.async_abort(reason="pairing_unavailable" if error.status == 409 else "cannot_connect")
@@ -187,8 +219,12 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.complete_pairing(ticket, key, certificate)
             except (ClientError, TimeoutError, OSError, ValueError):
                 return self._pairing_form(code, errors={"base": "not_confirmed"})
-            data = {**self._discovered_values, "key": key,
-                    "fingerprint": hashlib.sha256(certificate).hexdigest()}
+            credentials = {"key": key, "fingerprint": hashlib.sha256(certificate).hexdigest()}
+            if self.source == SOURCE_REAUTH:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=credentials,
+                )
+            data = {**self._discovered_values, **credentials}
             if self.source == SOURCE_RECONFIGURE:
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(), data_updates=data,

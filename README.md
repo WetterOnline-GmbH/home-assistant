@@ -101,3 +101,7 @@ The integration communicates via the local WOHome API v2 over HTTPS on port `808
 python3 -m compileall -q custom_components/wohome
 ha core check
 ```
+
+## License
+
+The integration is licensed under the [Apache License 2.0](LICENSE).

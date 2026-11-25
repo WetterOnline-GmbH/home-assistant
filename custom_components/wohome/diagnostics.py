@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from . import WoHomeConfigEntry
 
-TO_REDACT = {CONF_HOST, "key"}
+TO_REDACT = {CONF_HOST, "key", "fingerprint", "id", "name", "dashboard_path"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -18,6 +18,6 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry_data": async_redact_data(dict(entry.data), TO_REDACT),
         "entry_options": async_redact_data(dict(entry.options), TO_REDACT),
-        "info": coordinator.info,
-        "data": coordinator.data,
+        "info": async_redact_data(coordinator.info, TO_REDACT),
+        "data": async_redact_data(coordinator.data, TO_REDACT),
     }

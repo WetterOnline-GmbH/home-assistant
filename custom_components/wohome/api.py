@@ -53,15 +53,19 @@ class WoHomeApi:
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         context.minimum_version = ssl.TLSVersion.TLSv1_2
-        _, writer = await asyncio.open_connection(self._host, self._port, ssl=context)
-        try:
-            certificate = writer.get_extra_info("ssl_object").getpeercert(binary_form=True)
-        finally:
-            writer.close()
-            await writer.wait_closed()
+        async with asyncio.timeout(self._timeout.total):
+            _, writer = await asyncio.open_connection(self._host, self._port, ssl=context)
+            try:
+                certificate = writer.get_extra_info("ssl_object").getpeercert(binary_form=True)
+            finally:
+                writer.close()
+                await writer.wait_closed()
+        digest = hashlib.sha256(certificate).digest()
+        if self._fingerprint is not None and digest != self._fingerprint:
+            raise ValueError("The pairing certificate does not match the stored fingerprint")
         async with self._session.post(self._url("/pairing/start"), json={"nonce": nonce},
                                       timeout=self._timeout,
-                                      ssl=Fingerprint(hashlib.sha256(certificate).digest())) as response:
+                                      ssl=Fingerprint(digest)) as response:
             response.raise_for_status()
             data = await response.json()
             return data["ticket"], certificate

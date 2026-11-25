@@ -1,21 +1,17 @@
-"""Run in the Home Assistant test container: python /config/test_pairing_transport.py."""
+"""Exercise initial pairing and reauthentication against a local HTTPS station."""
 
 import asyncio
-import datetime
 import hashlib
 import secrets
-import ssl
-import tempfile
-from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientSession, ServerFingerprintMismatch, web
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.x509.oid import NameOID
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
+import pytest
 
 from custom_components.wohome.api import WoHomeApi
 from custom_components.wohome.config_flow import WoHomeConfigFlow
@@ -23,18 +19,12 @@ from custom_components.wohome.const import API_PATH
 from custom_components.wohome.coordinator import WoHomeCoordinator
 
 
-async def check() -> None:
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "WOHome test")])
-    cert = (x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(key.public_key())
-            .serial_number(x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.UTC))
-            .not_valid_after(datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1))
-            .sign(key, hashes.SHA256()))
-    der = cert.public_bytes(serialization.Encoding.DER)
+async def check(station_tls) -> None:
+    context, der, fingerprint = station_tls
     state: dict[str, str] = {}
 
     async def info(request):
-        return web.json_response({"id": "test", "api_version": 2})
+        return web.json_response({"id": state.get("id", "test"), "api_version": 2})
 
     async def start(request):
         if state.get("key"):
@@ -64,14 +54,9 @@ async def check() -> None:
     app.add_routes([web.get(f"{API_PATH}/info", info), web.post(f"{API_PATH}/pairing/start", start),
                     web.post(f"{API_PATH}/pairing/complete", complete), web.get(f"{API_PATH}/state", get_state),
                     web.post(f"{API_PATH}/pairing/revoke", revoke)])
-    with tempfile.TemporaryDirectory() as tmp:
-        Path(tmp, "cert.pem").write_bytes(cert.public_bytes(serialization.Encoding.PEM))
-        Path(tmp, "key.pem").write_bytes(key.private_bytes(serialization.Encoding.PEM,
-            serialization.PrivateFormat.TraditionalOpenSSL, serialization.NoEncryption()))
-        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.load_cert_chain(str(Path(tmp, "cert.pem")), str(Path(tmp, "key.pem")))
-        runner = web.AppRunner(app)
-        await runner.setup()
+    runner = web.AppRunner(app)
+    await runner.setup()
+    try:
         site = web.TCPSite(runner, "127.0.0.1", 0, ssl_context=context)
         await site.start()
         try:
@@ -79,19 +64,28 @@ async def check() -> None:
             async with ClientSession() as session:
                 api = WoHomeApi(session, "127.0.0.1", port)
                 assert (await api.get_info())["id"] == "test"
-                try:
+                with pytest.raises(ConfigEntryAuthFailed) as exc:
                     await WoHomeCoordinator._async_update_data(SimpleNamespace(api=api))
-                    raise AssertionError("missing credential accepted")
-                except ConfigEntryError as error:
-                    assert error.translation_key == "pairing_required"
+                assert exc.value.translation_key == "pairing_required"
                 nonce = secrets.token_urlsafe(32)
                 ticket, observed_cert = await api.start_pairing(nonce)
                 assert observed_cert == der
                 assert hashlib.sha256(observed_cert + nonce.encode("ascii") + ticket.encode("ascii")).digest()[:6] == \
                     hashlib.sha256(der + state["nonce"].encode("ascii") + state["ticket"].encode("ascii")).digest()[:6]
                 secret = secrets.token_urlsafe(32)
-                await api.complete_pairing(ticket, secret, observed_cert)
-                paired = WoHomeApi(session, "127.0.0.1", port, secret, hashlib.sha256(der).hexdigest())
+                entry_data = {"host": "127.0.0.1", "port": port, "name": "Test station"}
+                flow = WoHomeConfigFlow()
+                flow.context = {"source": SOURCE_USER}
+                flow.hass = SimpleNamespace(config=SimpleNamespace(language="en"))
+                flow._discovered_values = entry_data
+                with patch.object(flow, "_set_confirm_only"), patch(
+                    "custom_components.wohome.config_flow.async_get_clientsession", return_value=session
+                ), patch("custom_components.wohome.config_flow.secrets.token_urlsafe", return_value=secret):
+                    assert (await flow.async_step_pairing())["step_id"] == "pairing"
+                    created = await flow.async_step_pairing({})
+                assert created["type"] is FlowResultType.CREATE_ENTRY
+                assert created["data"] == {**entry_data, "key": secret, "fingerprint": fingerprint}
+                paired = WoHomeApi(session, "127.0.0.1", port, secret, fingerprint)
                 assert (await paired.get_state())["ok"]
                 flow = WoHomeConfigFlow()
                 flow.hass = None
@@ -107,21 +101,52 @@ async def check() -> None:
                 except ValueError:
                     pass
                 wrong = WoHomeApi(session, "127.0.0.1", port, secret, "00" * 32)
-                try:
+                with pytest.raises(ServerFingerprintMismatch):
                     await wrong.get_state()
-                    raise AssertionError("wrong certificate accepted")
-                except ServerFingerprintMismatch:
-                    pass
+                with pytest.raises(UpdateFailed):
+                    await WoHomeCoordinator._async_update_data(SimpleNamespace(api=wrong))
+                with pytest.raises(ValueError, match="does not match"):
+                    await wrong.start_pairing(nonce)
                 await paired.revoke()
-                try:
-                    await paired.get_state()
-                    raise AssertionError("revoked credential accepted")
-                except Exception as error:
-                    assert "ClientResponseError" in type(error).__name__, type(error).__name__
+                with pytest.raises(ConfigEntryAuthFailed):
+                    await WoHomeCoordinator._async_update_data(SimpleNamespace(api=paired))
+
+                entry = SimpleNamespace(
+                    entry_id="existing", unique_id="test", title="Test station",
+                    data=created["data"], update_listeners=[],
+                )
+                entries = Mock()
+                entries.async_get_known_entry.return_value = entry
+                flow = WoHomeConfigFlow()
+                flow.context = {"source": SOURCE_REAUTH, "entry_id": entry.entry_id}
+                flow.hass = SimpleNamespace(config=SimpleNamespace(language="en"), config_entries=entries)
+                with patch.object(flow, "_set_confirm_only"), patch(
+                    "custom_components.wohome.config_flow.async_get_clientsession", return_value=session
+                ):
+                    assert (await flow.async_step_reauth(entry.data))["step_id"] == "reauth_confirm"
+                    state["id"] = "different-device"
+                    assert (await flow.async_step_reauth_confirm({}))["reason"] == "wrong_device"
+                    del state["id"]
+                    entries.async_update_entry.assert_not_called()
+                    assert (await flow.async_step_reauth_confirm({}))["step_id"] == "pairing"
+                    entries.async_update_entry.assert_not_called()
+                    assert (await flow.async_step_pairing({}))["reason"] == "reauth_successful"
+                update = entries.async_update_entry.call_args.kwargs
+                assert update["entry"] is entry
+                new_key = update["data"]["key"]
+                assert new_key != secret
+                assert update["data"] == {**entry.data, "key": new_key}
+                entries.async_schedule_reload.assert_called_once_with(entry.entry_id)
+                assert (await WoHomeApi(session, "127.0.0.1", port, new_key, fingerprint).get_state())["ok"]
         finally:
-            await runner.cleanup()
+            await site.stop()
+    finally:
+        await runner.cleanup()
+    with pytest.raises(UpdateFailed):
+        async with ClientSession() as session:
+            offline = WoHomeApi(session, "127.0.0.1", port, secret, fingerprint)
+            await WoHomeCoordinator._async_update_data(SimpleNamespace(api=offline))
 
 
-if __name__ == "__main__":
-    asyncio.run(check())
-    print("HA Docker: HTTPS pairing transport and certificate pinning passed")
+def test_pairing_transport(station_tls):
+    asyncio.run(check(station_tls))

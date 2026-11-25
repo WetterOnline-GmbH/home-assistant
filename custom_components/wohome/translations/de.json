@@ -16,6 +16,10 @@
         "title": "wetteronline home verbinden",
         "description": "Vergleiche den folgenden Code mit dem Display. Bestätige zuerst dort und fahre dann hier fort. Bei unterschiedlichen Codes nicht bestätigen."
       },
+      "reauth_confirm": {
+        "title": "wetteronline home erneut verbinden",
+        "description": "Das Gerät akzeptiert die bisherige Kopplung nicht mehr. Fahre fort, um es neu zu koppeln, ohne es aus Home Assistant zu entfernen."
+      },
       "reconfigure": {
         "title": "wetteronline home erneut verbinden",
         "description": "Verbinde das bestehende Gerät, ohne seine Entitäten oder Automationen zu löschen.",
@@ -29,6 +33,8 @@
       "wrong_device": "Unter dieser Adresse ist ein anderes wetteronline home erreichbar"
     },
     "abort": {
+      "reauth_successful": "wetteronline home wurde erneut verbunden",
+      "wrong_device": "Unter dieser Adresse ist ein anderes wetteronline home erreichbar. Ändere die Adresse über „Neu konfigurieren“.",
       "already_configured": "Dieses Gerät ist bereits konfiguriert",
       "no_device_id": "Das erkannte Gerät hat keine stabile ID geliefert",
       "not_wohome": "Der erkannte Dienst ist kein wetteronline home",
@@ -47,7 +53,7 @@
     "camera_not_found": {"message": "Wähle eine vorhandene Kamera-Entität."},
     "camera_failed": {"message": "Kamera konnte nicht geöffnet werden. Prüfe Stream-Unterstützung und die Verbindung zum Gerät."},
     "pairing_required": {
-      "message": "Keine gültige Kopplung mit wetteronline home. Trenne gegebenenfalls die bisherige Verbindung am Gerät und wähle für diesen Eintrag „Neu konfigurieren“."
+      "message": "Keine gültige Kopplung mit wetteronline home. Authentifiziere dich erneut, um das Gerät wieder zu verbinden."
     }
   },
   "services": {
