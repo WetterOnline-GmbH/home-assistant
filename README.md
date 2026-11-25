@@ -1,6 +1,8 @@
-# WOHome - HA Integration
+# weather & radar home — Home Assistant integration
 
-Custom integration for connecting WOHome stations locally to Home Assistant.
+Connect weather & radar home (wetteronline home) stations locally to Home Assistant.
+This guide covers API v2. See [GitHub Releases](https://github.com/WetterOnline-GmbH/home-assistant/releases)
+for available stable and pre-release versions.
 
 ## Features
 
@@ -14,24 +16,24 @@ Custom integration for connecting WOHome stations locally to Home Assistant.
 
 ## Requirements
 
-- Home Assistant 2026.3 or newer for the existing station controls
-- Home Assistant 2026.11.1 or newer for the camera action (earlier versions have not been tested)
-- Home Assistant feature enabled in the WOHome developer settings
+- Home Assistant 2026.3 or newer for station controls. Use 2026.11.1 or newer for the camera action;
+  earlier versions have not been tested with it.
+- A station app that supports API v2, with the Home Assistant feature enabled in the station's developer settings.
 
 The station API requires pairing and HTTPS with certificate pinning. Never forward port `8080` to the Internet.
-Existing unpaired entries can be paired via **Reconfigure** after updating both the station and this integration.
+After updating both the station app and the integration from API v1, use **Reconfigure** on the existing
+entry to pair it without removing its entities or automations.
 
 ## Installation
 
-1. Install the repo via HACS:
-   - Click the 3 dots in the top right corner.
-   - Select “Custom repositories”
-   - Add the URL to the repository. (https://github.com/WetterOnline-GmbH/home-assistant)
-   - Select “integration” as the type.
-   - Click the “ADD” button.
-1. Search for "wetteronline home" in HACS and install the integration
-1. Add the automatically detected WOHome under **Settings → Devices & Services**.
-  - If you are on a different network add it manually **Settings → Devices & Services → Add Integration → wetteronline home**.
+1. On Home Assistant 2026.11 or newer, open **Settings → Marketplace → Add from link**. Connect GitHub if prompted.
+   On older versions, use [HACS → Custom repositories](https://www.hacs.xyz/docs/faq/custom_repositories/).
+2. Add `https://github.com/WetterOnline-GmbH/home-assistant` as an **Integration** and install it.
+   To install a beta in the Marketplace, [enable pre-releases](https://www.home-assistant.io/integrations/marketplace/#keeping-installations-up-to-date) for the repository.
+3. Restart Home Assistant. Under **Settings → Devices & services**, select the discovered **wetteronline home**
+   station. If it is not discovered, select **Add integration → wetteronline home** and enter its address.
+4. Compare the pairing code in Home Assistant with the one on the station. If they match, confirm on the
+   station first, then continue in Home Assistant.
 
 After setup, the dashboard can be customized via the `Dashboard` select entity in the configuration section of the respective device.
 Choose **No dashboard** there to hide the dashboard button on the station; select a dashboard again to show it.
