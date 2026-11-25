@@ -14,7 +14,7 @@
       },
       "pairing": {
         "title": "wetteronline home verbinden",
-        "description": "Vergleiche {code} mit dem Code auf dem Display. Bestätige zuerst dort und fahre dann hier fort. Bei unterschiedlichen Codes nicht bestätigen."
+        "description": "Vergleiche den folgenden Code mit dem Display. Bestätige zuerst dort und fahre dann hier fort. Bei unterschiedlichen Codes nicht bestätigen."
       },
       "reconfigure": {
         "title": "wetteronline home erneut verbinden",

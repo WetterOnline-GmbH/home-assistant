@@ -14,7 +14,7 @@
       },
       "pairing": {
         "title": "Connect wetteronline home",
-        "description": "Compare {code} with the code on the display. Confirm on the display first, then continue here. Do not continue if they differ."
+        "description": "Compare the code below with the display. Confirm on the display first, then continue here. Do not continue if they differ."
       },
       "reconfigure": {
         "title": "Reconnect wetteronline home",
