@@ -76,9 +76,7 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="zeroconf_confirm",
                 data_schema=vol.Schema({
-                    vol.Optional("device"): ConstantSelector({
-                        "value": name, "label": f"Set up {name}?",
-                    }),
+                    vol.Optional("device"): ConstantSelector({"value": name}),
                 }),
                 description_placeholders={
                     "name": name
@@ -200,15 +198,13 @@ class WoHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self._pairing_form(code)
 
     def _pairing_form(self, code: str, errors: dict[str, str] | None = None) -> ConfigFlowResult:
+        code_reference = "den unten angezeigten Code" if self.hass.config.language.startswith("de") else "the code below"
         return self.async_show_form(
             step_id="pairing",
             data_schema=vol.Schema({
-                vol.Optional("verification"): ConstantSelector({
-                    "value": code,
-                    "label": f"Compare {code} with the code on the device. Only continue if they match.",
-                }),
+                vol.Optional("verification"): ConstantSelector({"value": code}),
             }),
-            description_placeholders={"code": code},
+            description_placeholders={"code": code_reference},
             errors=errors or {},
         )
 
