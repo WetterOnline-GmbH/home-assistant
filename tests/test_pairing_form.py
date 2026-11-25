@@ -15,7 +15,7 @@ def test_pairing_code_visible_without_translation_on_initial_and_retry_forms():
         complete_pairing=AsyncMock(side_effect=ClientError("not confirmed")),
     )
     flow = WoHomeConfigFlow()
-    flow.hass = None
+    flow.hass = SimpleNamespace(config=SimpleNamespace(language="en"))
     flow._discovered_values = {"host": "example.invalid", "port": 8080}
 
     with patch.object(flow, "_set_confirm_only"), patch(
@@ -32,6 +32,11 @@ def test_pairing_code_visible_without_translation_on_initial_and_retry_forms():
         assert retry["description_placeholders"]["code"] == code
         assert retry["data_schema"]({}) == {}
         assert code in next(iter(retry["data_schema"].schema.values())).config["label"]
+
+        flow.hass.config.language = "de"
+        german = flow._pairing_form(code)
+        label = next(iter(german["data_schema"].schema.values())).config["label"]
+        assert code in label and "Nur bei Übereinstimmung" in label and "Compare" not in label
 
 
 def test_discovery_confirmation_visible_without_translation():
