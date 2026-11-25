@@ -1,8 +1,8 @@
-# WOHome - HA Integration
+# weather & radar home - Home Assistant Integration
 
 > **INTERNAL USE ONLY - NOT AVAILABLE FOR PUBLIC USE YET**
 
-Custom integration for connecting WOHome stations locally to Home Assistant.
+Custom integration for connecting weather & radar home devices locally to Home Assistant.
 
 ## Features
 
