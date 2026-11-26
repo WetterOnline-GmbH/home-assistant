@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from asyncio import Lock
+
 from aiohttp import ClientError
 
+from homeassistant.components.lovelace.const import EVENT_LOVELACE_UPDATED
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_PANELS_UPDATED, EntityCategory
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError
@@ -13,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import WoHomeConfigEntry
 from .const import CONF_DASHBOARD_PATH, DEFAULT_DASHBOARD_PATH, DOMAIN
 from .coordinator import WoHomeCoordinator
-from .dashboard import DashboardOption, dashboard_options, dashboard_url
+from .dashboard import DashboardOption, async_dashboard_options, dashboard_url
 
 PARALLEL_UPDATES = 1 # no parallel updates to avoid race conditions
 
@@ -53,6 +56,30 @@ class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
             f"{entry.unique_id or entry.entry_id}_dashboard"
         )
         self._attr_device_info = coordinator.device_info
+        self._dashboard_options: list[DashboardOption] = []
+        self._dashboard_options_lock = Lock()
+        self._dashboard_options_active = False
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self._dashboard_options_active = True
+        for event_type in (EVENT_LOVELACE_UPDATED, EVENT_PANELS_UPDATED):
+            self.async_on_remove(self._hass.bus.async_listen(event_type, self._async_refresh_options))
+        await self._async_refresh_options()
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._dashboard_options_active = False
+        await super().async_will_remove_from_hass()
+
+    async def _async_refresh_options(self, event: Event | None = None) -> None:
+        async with self._dashboard_options_lock:
+            if not self._dashboard_options_active:
+                return
+            options = await async_dashboard_options(self._hass)
+            if self._dashboard_options_active and options != self._dashboard_options:
+                self._dashboard_options = options
+                if event is not None:
+                    self.async_write_ha_state()
 
     @property
     def options(self) -> list[str]:
@@ -98,10 +125,6 @@ class WoHomeDashboardSelect(CoordinatorEntity[WoHomeCoordinator], SelectEntity):
             },
         )
         self.async_write_ha_state()
-
-    @property
-    def _dashboard_options(self) -> list[DashboardOption]:
-        return dashboard_options(self._hass)
 
     @property
     def _current_path(self) -> str:
