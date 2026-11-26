@@ -1,9 +1,21 @@
 import asyncio
+from unittest.mock import AsyncMock
 
 import pytest
 from aiohttp import ClientSession, web
 
 from custom_components.wohome.api import WoHomeApi
+
+
+def test_camera_api_sends_mjpeg_url(monkeypatch):
+    put_json = AsyncMock()
+    monkeypatch.setattr(WoHomeApi, "_put_json", put_json)
+    api = WoHomeApi(None, "station.example", 8080)
+    url = "http://ha.example/api/camera_proxy_stream/camera.door?interval=1&authSig=example"
+
+    asyncio.run(api.open_camera("", "Door", 30, mjpeg_url=url))
+
+    put_json.assert_awaited_once_with("/camera", {"url": "", "title": "Door", "duration": 30, "mjpeg_url": url})
 
 
 @pytest.mark.parametrize("webrtc_url", [None, "http://ha.example/camera/webrtc?authSig=example"])
