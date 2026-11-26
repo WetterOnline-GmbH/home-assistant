@@ -2,28 +2,71 @@
   "config": {
     "step": {
       "user": {
-        "title": "WetterOnline Home",
-        "description": "Richte das erkannte WetterOnline-Home-Gerät ein.",
+        "title": "wetteronline home",
         "data": {
           "host": "Host",
           "port": "Port"
         }
       },
       "zeroconf_confirm": {
-        "title": "WetterOnline Home",
+        "title": "wetteronline home",
         "description": "Möchtest du {name} einrichten?"
+      },
+      "pairing": {
+        "title": "wetteronline home verbinden",
+        "description": "Vergleiche den folgenden Code mit dem Display. Bestätige zuerst dort und fahre dann hier fort. Bei unterschiedlichen Codes nicht bestätigen."
+      },
+      "reconfigure": {
+        "title": "wetteronline home erneut verbinden",
+        "description": "Verbinde das bestehende Gerät, ohne seine Entitäten oder Automationen zu löschen.",
+        "data": {"host": "Host", "port": "Port"}
       }
     },
     "error": {
-      "cannot_connect": "Verbindung zu WetterOnline Home nicht möglich",
-      "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version"
+      "cannot_connect": "Verbindung zu wetteronline home nicht möglich",
+      "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version",
+      "not_confirmed": "Bitte zuerst am Display bestätigen oder die Einrichtung nach Ablauf erneut starten",
+      "wrong_device": "Unter dieser Adresse ist ein anderes wetteronline home erreichbar"
     },
     "abort": {
       "already_configured": "Dieses Gerät ist bereits konfiguriert",
       "no_device_id": "Das erkannte Gerät hat keine stabile ID geliefert",
-      "not_wohome": "Der erkannte Dienst ist kein WetterOnline-Home-Gerät",
-      "cannot_connect": "Verbindung zu WetterOnline Home nicht möglich",
+      "not_wohome": "Der erkannte Dienst ist kein wetteronline home",
+      "cannot_connect": "Verbindung zu wetteronline home nicht möglich",
+      "pairing_unavailable": "Kopplung derzeit nicht möglich. Warte und versuche es erneut. Falls das Gerät bereits mit einer anderen Home-Assistant-Instanz gekoppelt ist, trenne diese Verbindung zuerst am Gerät.",
       "unsupported_api": "Das Gerät verwendet eine nicht unterstützte API-Version"
+    }
+  },
+  "exceptions": {
+    "unsupported_api": {"message": "Das Gerät verwendet eine nicht unterstützte API-Version."},
+    "device_action_failed": {"message": "wetteronline home konnte nicht gesteuert werden. Prüfe Verbindung und Kopplung."},
+    "dashboard_failed": {"message": "Dashboard konnte nicht an wetteronline home gesendet werden. Prüfe die Home-Assistant-Adresse und Geräteverbindung."},
+    "unknown_dashboard": {"message": "Das ausgewählte Dashboard ist nicht mehr verfügbar."},
+    "camera_station_unavailable": {"message": "Wähle ein verfügbares wetteronline home."},
+    "camera_unsupported": {"message": "Aktualisiere die Geräte-App und lade die Integration neu, um die Kamera zu verwenden."},
+    "camera_not_found": {"message": "Wähle eine vorhandene Kamera-Entität."},
+    "camera_failed": {"message": "Kamera konnte nicht geöffnet werden. Prüfe Stream-Unterstützung und die Verbindung zum Gerät."},
+    "pairing_required": {
+      "message": "Keine gültige Kopplung mit wetteronline home. Trenne gegebenenfalls die bisherige Verbindung am Gerät und wähle für diesen Eintrag „Neu konfigurieren“."
+    }
+  },
+  "services": {
+    "open_camera_on_target": {
+      "name": "Kamera anzeigen",
+      "description": "Zeigt einen Kamerastream auf dem ausgewählten Stationsdisplay an.",
+      "fields": {
+        "camera_entity_id": {"name": "Kamera"},
+        "duration": {"name": "Anzeigedauer"}
+      }
+    },
+    "open_camera": {
+      "name": "Kamera anzeigen (Station auswählen)",
+      "description": "Zeigt einen Kamerastream im Videodialog der Station an.",
+      "fields": {
+        "device_id": {"name": "Station"},
+        "camera_entity_id": {"name": "Kamera"},
+        "duration": {"name": "Anzeigedauer"}
+      }
     }
   },
   "entity": {

@@ -1,0 +1,52 @@
+open_camera:
+  name: Show camera (select station)
+  description: Show a Home Assistant camera in the station's video dialog. Prefers WebRTC with HLS as a fallback. Home Assistant must be reachable from the station.
+  fields:
+    device_id:
+      name: Station
+      required: true
+      selector:
+        device:
+          integration: wohome
+    camera_entity_id:
+      name: Camera
+      required: true
+      selector:
+        entity:
+          filter:
+            domain: camera
+    duration:
+      name: Display duration
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 300
+          step: 1
+          mode: box
+          unit_of_measurement: s
+open_camera_on_target:
+  name: Show camera
+  description: Show a Home Assistant camera on the selected station display.
+  target:
+    entity:
+      integration: wohome
+      domain: switch
+  fields:
+    camera_entity_id:
+      name: Camera
+      required: true
+      selector:
+        entity:
+          filter:
+            domain: camera
+    duration:
+      name: Display duration
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 300
+          step: 1
+          mode: box
+          unit_of_measurement: s

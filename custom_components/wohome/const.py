@@ -1,12 +1,12 @@
 from datetime import timedelta
 
 DOMAIN = "wohome"
-DEFAULT_NAME = "WetterOnline Home"
+DEFAULT_NAME = "wetteronline home"
 DEFAULT_PORT = 8080
 UPDATE_INTERVAL = timedelta(seconds=60)
 
-API_VERSION = 1
-API_PATH = "/api/v1"
+API_VERSION = 2
+API_PATH = "/api/v2"
 
 CONF_NAME = "name"
 CONF_PORT = "port"

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from . import WoHomeConfigEntry
 
-TO_REDACT = {CONF_HOST}
+TO_REDACT = {CONF_HOST, "key"}
 
 
 async def async_get_config_entry_diagnostics(
