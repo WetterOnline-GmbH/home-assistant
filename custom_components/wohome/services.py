@@ -86,6 +86,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                         "", title, duration, webrtc_url=dashboard_url(hass, path)
                     )
                 elif not stream_types and runtime.coordinator.info.get("camera_mjpeg"):
+                    # interval selects Home Assistant's still-image stream at one frame per second; without it the camera's own stream handler is used.
                     path = async_sign_path(
                         hass, f"/api/camera_proxy_stream/{entity_id}?interval=1",
                         timedelta(seconds=duration + 20), use_content_user=True,
