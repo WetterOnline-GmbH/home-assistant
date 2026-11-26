@@ -74,19 +74,30 @@ def async_setup_services(hass: HomeAssistant) -> None:
         title = str(camera.attributes.get("friendly_name") or entity_id).strip()[:120] or entity_id
         try:
             async with asyncio.timeout(30):
-                supports_webrtc = "web_rtc" in get_camera_from_entity_id(hass, entity_id).camera_capabilities.frontend_stream_types
-                if entries[0].runtime_data.coordinator.info.get("camera_webrtc") and supports_webrtc:
+                runtime = entries[0].runtime_data
+                stream_types = get_camera_from_entity_id(hass, entity_id).camera_capabilities.frontend_stream_types
+                duration = call.data["duration"]
+                if runtime.coordinator.info.get("camera_webrtc") and "web_rtc" in stream_types:
                     path = async_sign_path(
                         hass, CAMERA_WEBRTC_PATH.format(entity_id=entity_id),
-                        timedelta(seconds=call.data["duration"] + 20), use_content_user=True,
+                        timedelta(seconds=duration + 20), use_content_user=True,
                     )
-                    await entries[0].runtime_data.api.open_camera(
-                        "", title, call.data["duration"], webrtc_url=dashboard_url(hass, path)
+                    await runtime.api.open_camera(
+                        "", title, duration, webrtc_url=dashboard_url(hass, path)
+                    )
+                elif not stream_types and runtime.coordinator.info.get("camera_mjpeg"):
+                    # interval selects Home Assistant's still-image stream at one frame per second; without it the camera's own stream handler is used.
+                    path = async_sign_path(
+                        hass, f"/api/camera_proxy_stream/{entity_id}?interval=1",
+                        timedelta(seconds=duration + 20), use_content_user=True,
+                    )
+                    await runtime.api.open_camera(
+                        "", title, duration, mjpeg_url=dashboard_url(hass, path)
                     )
                 else:
                     stream_path = await async_request_stream(hass, entity_id, "hls")
-                    await entries[0].runtime_data.api.open_camera(
-                        dashboard_url(hass, stream_path), title, call.data["duration"]
+                    await runtime.api.open_camera(
+                        dashboard_url(hass, stream_path), title, duration
                     )
         except (HomeAssistantError, ClientError, OSError, TimeoutError):
             raise HomeAssistantError(

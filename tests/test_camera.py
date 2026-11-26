@@ -70,6 +70,24 @@ def test_webrtc_is_preferred_without_starting_hls(monkeypatch, stream_types):
     )
 
 
+def test_snapshot_camera_uses_signed_mjpeg_for_capable_station(monkeypatch):
+    hass, entry, _, resolve, handler, call = camera_action(monkeypatch)
+    entry.runtime_data.coordinator.info["camera_mjpeg"] = True
+    camera = SimpleNamespace(camera_capabilities=SimpleNamespace(frontend_stream_types=set()))
+    monkeypatch.setattr(services, "get_camera_from_entity_id", lambda *_: camera)
+    path = "/api/camera_proxy_stream/camera.door?interval=1"
+    sign_path = Mock(return_value=path + "&authSig=example")
+    monkeypatch.setattr(services, "async_sign_path", sign_path)
+
+    asyncio.run(handler(call))
+
+    resolve.assert_not_awaited()
+    sign_path.assert_called_once_with(hass, path, services.timedelta(seconds=50), use_content_user=True)
+    entry.runtime_data.api.open_camera.assert_awaited_once_with(
+        "", "Door", 30, mjpeg_url="http://ha.example" + path + "&authSig=example"
+    )
+
+
 def test_legacy_device_registry_is_supported(monkeypatch):
     _, entry, registry, _, handler, call = camera_action(monkeypatch)
     registry.async_get.return_value = SimpleNamespace(config_entries={"station-entry"})
