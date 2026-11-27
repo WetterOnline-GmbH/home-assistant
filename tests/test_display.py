@@ -58,26 +58,27 @@ def test_auto_brightness_capability():
     assert any(isinstance(entity, WoHomeAutoBrightnessSwitch) for entity in add.call_args.args[0])
 
 
-def test_api_display_commands():
+def test_api_display_commands(station_tls):
     async def exercise():
         bodies = []
 
         async def handler(request):
             bodies.append((request.path, await request.json()))
-            if bodies[-1] == ("/api/v1/brightness", {"brightness": 0}):
+            if bodies[-1] == ("/api/v2/brightness", {"brightness": 0}):
                 return web.json_response({"error": "invalid_request"}, status=400)
             return web.json_response({})
 
         app = web.Application()
-        app.router.add_put("/api/v1/{path}", handler)
+        app.router.add_put("/api/v2/{path}", handler)
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, "127.0.0.1", 0)
+        context, _, fingerprint = station_tls
+        site = web.TCPSite(runner, "127.0.0.1", 0, ssl_context=context)
         await site.start()
         port = site._server.sockets[0].getsockname()[1]
         try:
             async with ClientSession() as session:
-                api = WoHomeApi(session, "127.0.0.1", port)
+                api = WoHomeApi(session, "127.0.0.1", port, "test-key", fingerprint)
                 await api.set_display(True)
                 await api.set_brightness(51)
                 await api.set_auto_brightness(True)
@@ -85,10 +86,10 @@ def test_api_display_commands():
                     await api.set_brightness(0)
                 assert error.value.status == 400
             assert bodies == [
-                ("/api/v1/display", {"is_on": True}),
-                ("/api/v1/brightness", {"brightness": 51}),
-                ("/api/v1/auto_brightness", {"enabled": True}),
-                ("/api/v1/brightness", {"brightness": 0}),
+                ("/api/v2/display", {"is_on": True}),
+                ("/api/v2/brightness", {"brightness": 51}),
+                ("/api/v2/auto_brightness", {"enabled": True}),
+                ("/api/v2/brightness", {"brightness": 0}),
             ]
         finally:
             await runner.cleanup()

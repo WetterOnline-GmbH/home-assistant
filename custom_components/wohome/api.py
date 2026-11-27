@@ -97,10 +97,28 @@ class WoHomeApi:
     async def open_camera(
         self, url: str, title: str, duration: int, *,
         webrtc_url: str | None = None, mjpeg_url: str | None = None,
+        action: dict[str, str] | None = None,
     ) -> None:
-        body = {"url": url, "title": title, "duration": duration}
+        body: dict[str, Any] = {"url": url, "title": title, "duration": duration}
         if webrtc_url is not None:
             body["webrtc_url"] = webrtc_url
         if mjpeg_url is not None:
             body["mjpeg_url"] = mjpeg_url
+        if action is not None:
+            body["action"] = action
         await self._put_json("/camera", body)
+
+    async def poll_camera_action(self, action_id: str) -> str:
+        async with self._session.post(
+            self._url("/camera/action"), json={"id": action_id}, timeout=self._timeout,
+            ssl=self._ssl(), headers=self._headers(),
+        ) as response:
+            response.raise_for_status()
+            return (await response.json())["status"]
+
+    async def finish_camera_action(self, action_id: str, accepted: bool) -> None:
+        async with self._session.post(
+            self._url("/camera/action"), json={"id": action_id, "accepted": accepted},
+            timeout=self._timeout, ssl=self._ssl(), headers=self._headers(),
+        ) as response:
+            response.raise_for_status()

@@ -88,6 +88,72 @@ def test_snapshot_camera_uses_signed_mjpeg_for_capable_station(monkeypatch):
     )
 
 
+@pytest.mark.parametrize("event,available,accepted", [
+    ("pressed", True, True), ("pressed", False, False), ("closed", True, None),
+])
+def test_camera_button_runs_only_the_saved_script_after_a_valid_press(monkeypatch, event, available, accepted):
+    hass, entry, _, _, handler, call = camera_action(monkeypatch)
+    call.data.update(action_script="script.entry_light", action_label="Entry light")
+    call.context.user_id = "viewer"
+    user = Mock(is_admin=False, is_active=True)
+    user.permissions.check_entity.return_value = True
+    hass.auth.async_get_user = AsyncMock(return_value=user)
+    camera = hass.states.get.return_value
+    script = SimpleNamespace(state="off")
+    hass.states.get.side_effect = lambda entity_id: script if entity_id == "script.entry_light" else camera
+    hass.services.async_call = AsyncMock()
+    entry.runtime_data.coordinator.info["camera_action"] = True
+    api = entry.runtime_data.api
+
+    async def poll(_):
+        script.state = "off" if available else "unavailable"
+        return event
+
+    api.poll_camera_action = AsyncMock(side_effect=poll)
+    api.finish_camera_action = AsyncMock()
+
+    async def exercise():
+        await handler(call)
+        action = api.open_camera.await_args.kwargs["action"]
+        assert action["label"] == "Entry light"
+        assert set(action) == {"id", "label"}
+        hass.services.async_call.assert_not_awaited()
+        await entry.async_create_background_task.call_args.args[1]
+        if accepted:
+            hass.services.async_call.assert_awaited_once_with(
+                "script", "turn_on", {"entity_id": "script.entry_light"}, blocking=True, context=call.context,
+            )
+        else:
+            hass.services.async_call.assert_not_awaited()
+        if accepted is None:
+            api.finish_camera_action.assert_not_awaited()
+        else:
+            api.finish_camera_action.assert_awaited_once_with(action["id"], accepted)
+
+    asyncio.run(exercise())
+
+
+def test_camera_button_is_omitted_for_older_stations(monkeypatch):
+    _, entry, _, _, handler, call = camera_action(monkeypatch)
+    call.data.update(action_script="script.entry_light", action_label="Entry light")
+    asyncio.run(handler(call))
+    assert "action" not in entry.runtime_data.api.open_camera.await_args.kwargs
+    entry.async_create_background_task.assert_not_called()
+
+
+def test_camera_button_requires_script_control_permission(monkeypatch):
+    hass, entry, _, _, handler, call = camera_action(monkeypatch)
+    call.data.update(action_script="script.entry_light", action_label="Entry light")
+    call.context.user_id = "viewer"
+    user = Mock(is_admin=False, is_active=True)
+    user.permissions.check_entity.side_effect = lambda entity_id, _: entity_id != "script.entry_light"
+    hass.auth.async_get_user = AsyncMock(return_value=user)
+    entry.runtime_data.coordinator.info["camera_action"] = True
+    with pytest.raises(Unauthorized):
+        asyncio.run(handler(call))
+    entry.runtime_data.api.open_camera.assert_not_awaited()
+
+
 def test_legacy_device_registry_is_supported(monkeypatch):
     _, entry, registry, _, handler, call = camera_action(monkeypatch)
     registry.async_get.return_value = SimpleNamespace(config_entries={"station-entry"})

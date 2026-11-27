@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import logging
+from uuid import uuid4
 
 from aiohttp import ClientError
 import voluptuous as vol
@@ -10,30 +12,68 @@ from homeassistant.components.camera import async_request_stream, get_camera_fro
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError, Unauthorized
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers import entity_registry as er, target
 
+from .api import WoHomeApi
 from .const import DOMAIN
 from .dashboard import dashboard_url
 from .camera import CAMERA_WEBRTC_PATH, WoHomeCameraView
 
 SERVICE_OPEN_CAMERA = "open_camera"
 SERVICE_OPEN_CAMERA_ON_TARGET = "open_camera_on_target"
-OPEN_CAMERA_SCHEMA = vol.Schema(
-    {
-        vol.Required("device_id"): cv.string,
-        vol.Required("camera_entity_id"): cv.entity_id,
-        vol.Optional("duration", default=30): vol.All(cv.positive_int, vol.Range(min=1, max=300)),
-    }
-)
-OPEN_CAMERA_TARGET_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Required("camera_entity_id"): cv.entity_id,
-        vol.Optional("duration", default=30): vol.All(cv.positive_int, vol.Range(min=1, max=300)),
-    }
-)
+LOGGER = logging.getLogger(__name__)
+CAMERA_FIELDS = {
+    vol.Required("camera_entity_id"): cv.entity_id,
+    vol.Optional("duration", default=30): vol.All(cv.positive_int, vol.Range(min=1, max=300)),
+    vol.Optional("action_script"): cv.entity_domain("script"),
+    vol.Optional("action_label"): vol.All(cv.string, str.strip, vol.Length(min=1, max=40)),
+}
+OPEN_CAMERA_SCHEMA = vol.Schema({vol.Required("device_id"): cv.string, **CAMERA_FIELDS})
+OPEN_CAMERA_TARGET_SCHEMA = cv.make_entity_service_schema(CAMERA_FIELDS)
+
+
+async def _async_check_camera_script(hass: HomeAssistant, script: str, context: Context) -> None:
+    if user_id := context.user_id:
+        user = await hass.auth.async_get_user(user_id)
+        if user is None or not user.is_active or not user.permissions.check_entity(script, POLICY_CONTROL):
+            raise Unauthorized(entity_id=script)
+    state = hass.states.get(script)
+    if state is None or state.state == STATE_UNAVAILABLE:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="camera_script_unavailable")
+
+
+async def _async_handle_camera_action(
+    hass: HomeAssistant, api: WoHomeApi, action_id: str, script: str, deadline: float, context: Context,
+) -> None:
+    pressed = False
+    accepted = False
+    try:
+        async with asyncio.timeout_at(deadline):
+            while (status := await api.poll_camera_action(action_id)) == "waiting":
+                await asyncio.sleep(0.1)
+            if status != "pressed":
+                return
+            pressed = True
+            await _async_check_camera_script(hass, script, context)
+            if asyncio.get_running_loop().time() >= deadline:
+                return
+            await hass.services.async_call(
+                "script", "turn_on", {ATTR_ENTITY_ID: script}, blocking=True, context=context,
+            )
+            accepted = True
+    except TimeoutError:
+        pass
+    except (HomeAssistantError, ClientError, OSError, ValueError, KeyError):
+        LOGGER.debug("Could not process the wetteronline home camera button press")
+    if pressed:
+        try:
+            await api.finish_camera_action(action_id, accepted)
+        except (ClientError, OSError, TimeoutError, ValueError):
+            LOGGER.debug("Could not send camera button feedback to wetteronline home")
 
 
 @callback
@@ -71,38 +111,51 @@ def async_setup_services(hass: HomeAssistant) -> None:
         camera = hass.states.get(entity_id)
         if not entity_id.startswith("camera.") or camera is None:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="camera_not_found")
+        script = call.data.get("action_script")
+        action_label = call.data.get("action_label")
+        if (script is None) != (action_label is None):
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="camera_action_incomplete")
+        entry = entries[0]
+        runtime = entry.runtime_data
+        action_id = None
+        camera_options = {}
+        if script is not None and runtime.coordinator.info.get("camera_action") is True:
+            await _async_check_camera_script(hass, script, call.context)
+            action_id = uuid4().hex
+            camera_options["action"] = {"id": action_id, "label": action_label}
         title = str(camera.attributes.get("friendly_name") or entity_id).strip()[:120] or entity_id
+        duration = call.data["duration"]
         try:
             async with asyncio.timeout(30):
-                runtime = entries[0].runtime_data
                 stream_types = get_camera_from_entity_id(hass, entity_id).camera_capabilities.frontend_stream_types
-                duration = call.data["duration"]
+                url = ""
                 if runtime.coordinator.info.get("camera_webrtc") and "web_rtc" in stream_types:
                     path = async_sign_path(
                         hass, CAMERA_WEBRTC_PATH.format(entity_id=entity_id),
                         timedelta(seconds=duration + 20), use_content_user=True,
                     )
-                    await runtime.api.open_camera(
-                        "", title, duration, webrtc_url=dashboard_url(hass, path)
-                    )
+                    camera_options["webrtc_url"] = dashboard_url(hass, path)
                 elif not stream_types and runtime.coordinator.info.get("camera_mjpeg"):
                     # interval selects Home Assistant's still-image stream at one frame per second; without it the camera's own stream handler is used.
                     path = async_sign_path(
                         hass, f"/api/camera_proxy_stream/{entity_id}?interval=1",
                         timedelta(seconds=duration + 20), use_content_user=True,
                     )
-                    await runtime.api.open_camera(
-                        "", title, duration, mjpeg_url=dashboard_url(hass, path)
-                    )
+                    camera_options["mjpeg_url"] = dashboard_url(hass, path)
                 else:
                     stream_path = await async_request_stream(hass, entity_id, "hls")
-                    await runtime.api.open_camera(
-                        dashboard_url(hass, stream_path), title, duration
-                    )
+                    url = dashboard_url(hass, stream_path)
+                deadline = asyncio.get_running_loop().time() + duration
+                await runtime.api.open_camera(url, title, duration, **camera_options)
         except (HomeAssistantError, ClientError, OSError, TimeoutError):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="camera_failed"
             ) from None
+        if action_id is not None:
+            entry.async_create_background_task(
+                hass, _async_handle_camera_action(hass, runtime.api, action_id, script, deadline, call.context),
+                "wohome camera action",
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_OPEN_CAMERA, open_camera, schema=OPEN_CAMERA_SCHEMA
@@ -147,11 +200,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 displays = allowed
                 if not displays:
                     raise Unauthorized()
+        camera_data = {key: call.data[key] for key in (
+            "camera_entity_id", "duration", "action_script", "action_label",
+        ) if key in call.data}
         for device_id in sorted(displays):
             await hass.services.async_call(
                 DOMAIN, SERVICE_OPEN_CAMERA,
-                {"device_id": device_id, "camera_entity_id": call.data["camera_entity_id"],
-                 "duration": call.data["duration"]},
+                {"device_id": device_id, **camera_data},
                 blocking=True, context=call.context,
             )
 
