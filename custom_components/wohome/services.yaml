@@ -25,6 +25,18 @@ open_camera:
           step: 1
           mode: box
           unit_of_measurement: s
+    action_script:
+      name: Button script
+      description: Optional script started when someone presses the button on the station.
+      selector:
+        entity:
+          filter:
+            domain: script
+    action_label:
+      name: Button label
+      description: Button text, up to 40 characters. Required when a script is selected.
+      selector:
+        text:
 open_camera_on_target:
   name: Show camera
   description: Show a Home Assistant camera on the selected station display.
@@ -50,3 +62,15 @@ open_camera_on_target:
           step: 1
           mode: box
           unit_of_measurement: s
+    action_script:
+      name: Button script
+      description: Optional script started when someone presses the button on the station.
+      selector:
+        entity:
+          filter:
+            domain: script
+    action_label:
+      name: Button label
+      description: Button text, up to 40 characters. Required when a script is selected.
+      selector:
+        text:

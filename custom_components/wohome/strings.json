@@ -44,6 +44,8 @@
     "unknown_dashboard": {"message": "The selected dashboard is no longer available."},
     "camera_station_unavailable": {"message": "Select an available wetteronline home device."},
     "camera_unsupported": {"message": "Update the device app and reload the integration to enable the camera."},
+    "camera_action_incomplete": {"message": "Select a script and enter a label to show the button."},
+    "camera_script_unavailable": {"message": "Select an available script."},
     "camera_not_found": {"message": "Select an existing camera entity."},
     "camera_failed": {"message": "Could not open the camera. Check streaming support and the connection to the device."},
     "pairing_required": {
@@ -56,7 +58,9 @@
       "description": "Show a camera stream on the selected station display.",
       "fields": {
         "camera_entity_id": {"name": "Camera"},
-        "duration": {"name": "Display duration"}
+        "duration": {"name": "Display duration"},
+        "action_script": {"name": "Button script", "description": "Optional script. Anyone at the station can start it by pressing the button."},
+        "action_label": {"name": "Button label", "description": "Up to 40 characters. Required when a script is selected."}
       }
     },
     "open_camera": {
@@ -65,7 +69,9 @@
       "fields": {
         "device_id": {"name": "Station"},
         "camera_entity_id": {"name": "Camera"},
-        "duration": {"name": "Display duration"}
+        "duration": {"name": "Display duration"},
+        "action_script": {"name": "Button script", "description": "Optional script. Anyone at the station can start it by pressing the button."},
+        "action_label": {"name": "Button label", "description": "Up to 40 characters. Required when a script is selected."}
       }
     }
   },

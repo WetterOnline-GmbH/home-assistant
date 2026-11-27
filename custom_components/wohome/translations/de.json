@@ -44,6 +44,8 @@
     "unknown_dashboard": {"message": "Das ausgewählte Dashboard ist nicht mehr verfügbar."},
     "camera_station_unavailable": {"message": "Wähle ein verfügbares wetteronline home."},
     "camera_unsupported": {"message": "Aktualisiere die Geräte-App und lade die Integration neu, um die Kamera zu verwenden."},
+    "camera_action_incomplete": {"message": "Gib ein Skript und eine Beschriftung an, um den Button einzublenden."},
+    "camera_script_unavailable": {"message": "Wähle ein verfügbares Skript."},
     "camera_not_found": {"message": "Wähle eine vorhandene Kamera-Entität."},
     "camera_failed": {"message": "Kamera konnte nicht geöffnet werden. Prüfe Stream-Unterstützung und die Verbindung zum Gerät."},
     "pairing_required": {
@@ -56,7 +58,9 @@
       "description": "Zeigt einen Kamerastream auf dem ausgewählten Stationsdisplay an.",
       "fields": {
         "camera_entity_id": {"name": "Kamera"},
-        "duration": {"name": "Anzeigedauer"}
+        "duration": {"name": "Anzeigedauer"},
+        "action_script": {"name": "Button-Skript", "description": "Optionales Skript. Jede Person am Display kann es über den eingeblendeten Button starten."},
+        "action_label": {"name": "Button-Beschriftung", "description": "Bis zu 40 Zeichen. Erforderlich, wenn ein Skript ausgewählt ist."}
       }
     },
     "open_camera": {
@@ -65,7 +69,9 @@
       "fields": {
         "device_id": {"name": "Station"},
         "camera_entity_id": {"name": "Kamera"},
-        "duration": {"name": "Anzeigedauer"}
+        "duration": {"name": "Anzeigedauer"},
+        "action_script": {"name": "Button-Skript", "description": "Optionales Skript. Jede Person am Display kann es über den eingeblendeten Button starten."},
+        "action_label": {"name": "Button-Beschriftung", "description": "Bis zu 40 Zeichen. Erforderlich, wenn ein Skript ausgewählt ist."}
       }
     }
   },
