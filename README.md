@@ -48,6 +48,10 @@ Stations without camera support reject the action when it runs.
 The station wakes up, displays the video without audio, and closes it after 30 seconds by default.
 An incoming camera replaces the current video; repeated requests reset the display duration.
 Closing the dialog returns to the previous screen and restores standby if the display was initially off.
+To add a button below the video, select an existing Home Assistant script in **Button script** and
+enter a **Button label**, for example *Turn on entry light*. Anyone at the station can start that script
+by pressing the button while the dialog is open. Leave both fields empty to show just the video.
+The button requires station app support; older stations still show the video.
 The station starts connecting as soon as the command arrives and shows a loading screen until a video
 frame has actually been rendered. No permanent camera preloading or extra snapshot requests are enabled.
 The station releases its player when closed or backgrounded. A provider may retain a not-yet-connected
